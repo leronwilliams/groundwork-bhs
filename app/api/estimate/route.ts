@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
-import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import { ESTIMATION_SYSTEM_PROMPT } from '@/lib/estimation-prompt'
 
@@ -11,7 +10,8 @@ export const maxDuration = 300 // 5 minutes for large plans
 
 export async function POST(req: NextRequest) {
   try {
-    const { userId } = await auth()
+    let userId: string | null = null
+    try { const { auth } = await import('@clerk/nextjs/server'); const a = await auth(); userId = a.userId } catch {}
     const { fileUrl, brief, orderId, serviceType } = await req.json()
 
     if (!brief) {
