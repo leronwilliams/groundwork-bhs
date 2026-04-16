@@ -15,22 +15,10 @@ export function BlueprintCard({ title, category, island, children, className = '
   return (
     <div
       onClick={onClick}
-      className={`relative group p-6 rounded-sm cursor-default ${onClick ? 'cursor-pointer' : ''} ${className}`}
+      className={`relative group card-hover p-6 rounded-sm ${onClick ? 'cursor-pointer' : ''} ${className}`}
       style={{
         background: 'var(--navy-card)',
         border: '1px solid var(--cyan-border)',
-        boxShadow: '0 0 0 0 rgba(6,182,212,0)',
-        transition: 'box-shadow 0.2s ease, border-color 0.2s ease',
-      }}
-      onMouseEnter={e => {
-        const el = e.currentTarget as HTMLElement
-        el.style.boxShadow = '0 0 20px rgba(6,182,212,0.08)'
-        el.style.borderColor = 'rgba(6,182,212,0.4)'
-      }}
-      onMouseLeave={e => {
-        const el = e.currentTarget as HTMLElement
-        el.style.boxShadow = '0 0 0 0 rgba(6,182,212,0)'
-        el.style.borderColor = 'var(--cyan-border)'
       }}
     >
       {/* Corner brackets */}
