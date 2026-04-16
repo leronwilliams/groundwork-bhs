@@ -87,7 +87,21 @@ export default async function HomePage() {
       {/* Section 1 — Video Hero */}
       <VideoHero videoSrc={heroVideoUrl} fallbackImage={heroFallback}>
         <div className="flex flex-col items-center justify-center min-h-screen text-center px-6 pt-16">
-          <div className="section-label mb-8 px-4 py-2 rounded-sm" style={{ border: '1px solid var(--cyan-border)', background: 'var(--cyan-dim)' }}>
+          <div
+            className="mb-8 inline-block"
+            style={{
+              fontSize: '0.85rem',
+              fontWeight: 700,
+              color: '#ffffff',
+              background: 'rgba(0,212,245,0.15)',
+              border: '1px solid rgba(0,212,245,0.5)',
+              padding: '6px 16px',
+              borderRadius: '4px',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+              fontFamily: 'JetBrains Mono, monospace',
+            }}
+          >
             The Bahamas Construction &amp; Property Platform
           </div>
           <h1 className="mb-6" style={{ color: 'var(--text-bright)', textShadow: '0 2px 40px rgba(0,0,0,0.5)' }}>
