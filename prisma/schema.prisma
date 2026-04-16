@@ -10,12 +10,41 @@ datasource db {
 model User {
   id              String           @id @default(cuid())
   clerkId         String           @unique
-  email           String           @unique
+  email           String?          @unique
   name            String?
   island          String?
   projects        Project[]
   advisorSessions AdvisorSession[]
+  subscription    Subscription?
+  orders          Order[]
   createdAt       DateTime         @default(now())
+}
+
+model Subscription {
+  id               String    @id @default(cuid())
+  userId           String    @unique
+  user             User      @relation(fields: [userId], references: [id])
+  tier             String    @default("free") // free | pro | builder
+  stripeCustomerId String?
+  stripePriceId    String?
+  stripeSubId      String?
+  status           String    @default("active")
+  currentPeriodEnd DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+}
+
+model Order {
+  id              String   @id @default(cuid())
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  type            String   // lead | estimate_single | estimate_full | boq | boq_hardware | boq_quotes | permit_prep | contract | tax_appeal
+  amount          Int      // in cents
+  status          String   @default("pending") // pending | paid | delivered | refunded
+  stripePaymentId String?
+  metadata        Json?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
 }
 
 model Project {
@@ -46,17 +75,29 @@ model Guide {
 }
 
 model Contractor {
-  id           String  @id @default(cuid())
-  name         String
-  trade        String
-  island       String
-  phone        String?
-  email        String?
-  website      String?
-  verified     Boolean @default(false)
-  featuredTier String?
-  description  String?
-  imageUrl     String?
+  id            String   @id @default(cuid())
+  name          String
+  trade         String
+  island        String
+  phone         String?
+  email         String?
+  website       String?
+  description   String?
+  imageUrl      String?
+  verified      Boolean  @default(false)
+  featuredTier  String?  // null | basic | featured | premium
+  monthlyFee    Int?     // in cents
+  stripeSubId   String?
+  listingStatus String   @default("active")
+}
+
+model AdvisorSession {
+  id        String   @id @default(cuid())
+  userId    String?
+  user      User?    @relation(fields: [userId], references: [id])
+  messages  Json
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
 model AdvisorCache {
@@ -76,13 +117,4 @@ model PexelsCache {
   resourceType String
   data         Json
   createdAt    DateTime @default(now())
-}
-
-model AdvisorSession {
-  id        String   @id @default(cuid())
-  userId    String?
-  user      User?    @relation(fields: [userId], references: [id])
-  messages  Json
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
 }
