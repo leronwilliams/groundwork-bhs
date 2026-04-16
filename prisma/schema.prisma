@@ -46,6 +46,7 @@ model Order {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
   estimateResult  EstimateResult?
+  boqQuoteRequests BOQQuoteRequest[]
 }
 
 model Project {
@@ -99,6 +100,45 @@ model AdvisorSession {
   messages  Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model HardwareStore {
+  id          String             @id @default(cuid())
+  name        String
+  island      String
+  email       String
+  phone       String?
+  contactName String?
+  tier        String             @default("free") // free | listed | premium
+  monthlyFee  Int?
+  stripeSubId String?
+  active      Boolean            @default(true)
+  responses   BOQQuoteResponse[]
+  createdAt   DateTime           @default(now())
+}
+
+model BOQQuoteRequest {
+  id           String             @id @default(cuid())
+  orderId      String
+  order        Order              @relation(fields: [orderId], references: [id])
+  boqData      Json
+  storesSentTo String[]
+  responses    BOQQuoteResponse[]
+  status       String             @default("pending") // pending | responses_received | delivered
+  sentAt       DateTime           @default(now())
+  deadlineAt   DateTime
+  createdAt    DateTime           @default(now())
+}
+
+model BOQQuoteResponse {
+  id          String          @id @default(cuid())
+  requestId   String
+  request     BOQQuoteRequest @relation(fields: [requestId], references: [id])
+  storeId     String
+  store       HardwareStore   @relation(fields: [storeId], references: [id])
+  priceData   Json
+  totalAmount Int?
+  receivedAt  DateTime        @default(now())
 }
 
 model EstimateResult {
