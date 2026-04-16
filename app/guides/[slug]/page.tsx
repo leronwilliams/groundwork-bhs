@@ -8,12 +8,13 @@ import { BlueprintCard } from '@/components/ui/BlueprintCard'
 export const revalidate = 60
 
 interface Params {
-  params: { slug: string }
+  params: Promise<{ slug: string }>
 }
 
 export default async function GuideDetailPage({ params }: Params) {
+  const { slug } = await params
   const [guide, related] = await Promise.all([
-    prisma.guide.findUnique({ where: { slug: params.slug } }),
+    prisma.guide.findUnique({ where: { slug } }),
     prisma.guide.findMany({ take: 3, orderBy: { order: 'asc' } }),
   ])
 

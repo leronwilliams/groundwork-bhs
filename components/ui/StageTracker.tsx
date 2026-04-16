@@ -14,7 +14,6 @@ export function StageTracker({ currentStage, className = '' }: StageTrackerProps
         const stageNum = i + 1
         const completed = stageNum < currentStage
         const active = stageNum === currentStage
-        const pending = stageNum > currentStage
 
         return (
           <div key={stage} className="flex items-center flex-1">

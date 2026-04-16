@@ -17,9 +17,6 @@ export function AdvisorWidget() {
   const pathname = usePathname()
   const bottomRef = useRef<HTMLDivElement>(null)
 
-  // Hide on advisor page
-  if (pathname === '/advisor') return null
-
   const send = async () => {
     if (!input.trim() || loading) return
     const userMsg: Message = { role: 'user', content: input }
@@ -63,6 +60,9 @@ export function AdvisorWidget() {
   }, [messages])
 
   const recentMessages = messages.slice(-3)
+
+  // Hide on advisor page (after all hooks)
+  if (pathname === '/advisor') return null
 
   return (
     <div className="fixed bottom-6 right-6 z-50">

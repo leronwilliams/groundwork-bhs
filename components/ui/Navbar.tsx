@@ -6,7 +6,7 @@ import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
 
 export function Navbar() {
   const [scrolled, setScrolled] = useState(false)
-  const { isSignedIn, user } = useUser()
+  const { isSignedIn } = useUser()
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 50)

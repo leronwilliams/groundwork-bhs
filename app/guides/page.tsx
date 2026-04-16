@@ -2,7 +2,6 @@ import Link from 'next/link'
 import { prisma } from '@/lib/db'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
 import { SectionBadge } from '@/components/ui/SectionBadge'
-import { IslandTag } from '@/components/ui/IslandTag'
 
 export const revalidate = 60
 

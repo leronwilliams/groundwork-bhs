@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { BlueprintCard } from '@/components/ui/BlueprintCard'
 
 interface Message {
   role: 'user' | 'assistant'
