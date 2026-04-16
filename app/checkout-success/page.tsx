@@ -43,10 +43,19 @@ function SuccessContent() {
             : 'Your order has been received. We will deliver your document within 1–2 business days.'}
         </p>
         <div className="flex flex-col gap-3">
+          {!isSubscription && type && type !== 'lead' && (
+            <Link
+              href={`/order/${type}`}
+              className="block py-3 rounded-sm font-bold text-sm"
+              style={{ background: 'var(--cyan)', color: 'var(--navy)' }}
+            >
+              Submit Your Order Details
+            </Link>
+          )}
           <Link
             href="/dashboard"
             className="block py-3 rounded-sm font-bold text-sm"
-            style={{ background: 'var(--cyan)', color: 'var(--navy)' }}
+            style={{ background: isSubscription ? 'var(--cyan)' : 'transparent', color: isSubscription ? 'var(--navy)' : 'var(--text-secondary)', border: isSubscription ? 'none' : '1px solid var(--cyan-border)' }}
           >
             Go to Dashboard
           </Link>
