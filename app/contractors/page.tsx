@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
 import { IslandTag } from '@/components/ui/IslandTag'
 import { SectionBadge } from '@/components/ui/SectionBadge'
+import { CheckCircle, Lock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
 export const revalidate = 60
@@ -53,7 +54,15 @@ export default async function ContractorsPage() {
                       <div className="flex gap-2 flex-wrap mb-2">
                         <SectionBadge label={c.trade} />
                         <IslandTag island={c.island} />
-                        {c.verified && <span className="text-xs px-2 py-0.5 rounded-sm" style={{ background: 'rgba(5,150,105,0.2)', color: '#059669' }}>✓ Verified</span>}
+                        {c.verified ? (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm" style={{ background: 'rgba(5,150,105,0.2)', color: '#059669' }}>
+                        <CheckCircle size={12} strokeWidth={2} /> Verified
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm" style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}>
+                        <AlertCircle size={12} strokeWidth={2} /> Pending verification
+                      </span>
+                    )}
                       </div>
                       {c.description && <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>{c.description}</p>}
                       <div className="flex gap-4 text-sm flex-wrap">
@@ -97,8 +106,23 @@ export default async function ContractorsPage() {
         )}
 
         {contractors.length === 0 && (
-          <div className="text-center py-20" style={{ color: 'var(--muted)' }}>
-            Contractors are being verified and listed. Check back soon.
+          <div
+            className="text-center py-20 rounded-sm"
+            style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}
+          >
+            <Lock size={40} style={{ color: 'var(--cyan)', margin: '0 auto 16px', opacity: 0.6 }} />
+            <h2 className="text-2xl mb-3">Contractor Directory Coming Soon</h2>
+            <p className="mb-6 max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
+              We are verifying contractors across Nassau and the Family Islands. 
+              All listings go through an approval process before they appear here.
+            </p>
+            <Link
+              href="/advisor"
+              className="inline-block px-6 py-3 rounded-sm font-bold text-sm"
+              style={{ background: 'var(--cyan)', color: 'var(--navy)' }}
+            >
+              Ask the Advisor to find a contractor
+            </Link>
           </div>
         )}
 

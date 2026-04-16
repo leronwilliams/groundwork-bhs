@@ -59,6 +59,17 @@ model Contractor {
   imageUrl     String?
 }
 
+model AdvisorCache {
+  id        String   @id @default(cuid())
+  question  String   @db.Text
+  answer    String   @db.Text
+  embedding Json?    // stored as JSON array of floats (text-embedding-3-small, 1536 dims)
+  category  String?
+  hitCount  Int      @default(0)
+  createdAt DateTime @default(now())
+  lastHitAt DateTime @default(now())
+}
+
 model PexelsCache {
   id           String   @id @default(cuid())
   query        String   @unique

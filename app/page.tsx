@@ -383,15 +383,20 @@ export default async function HomePage() {
             <div className="text-xl font-black mb-1" style={{ fontFamily: 'Syne, sans-serif', color: 'white', letterSpacing: '-0.02em' }}>Groundwork</div>
             <div className="text-sm" style={{ color: 'var(--muted)' }}>Build right. From the ground up.</div>
           </div>
-          <div className="flex gap-8 text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+          <div className="flex gap-6 text-sm font-medium flex-wrap justify-center" style={{ color: 'var(--text-secondary)' }}>
             {['/guides', '/permits', '/property-tax', '/contractors', '/advisor', '/services', '/pricing'].map(href => (
               <Link key={href} href={href} className="hover:text-white transition-colors capitalize">
                 {href.replace('/', '')}
               </Link>
             ))}
           </div>
-          <div className="text-sm font-mono" style={{ color: 'var(--muted)' }}>
-            © 2026 Groundwork BHS
+          <div className="flex flex-col items-center gap-2">
+            <div className="text-sm font-mono" style={{ color: 'var(--muted)' }}>© 2026 Groundwork BHS</div>
+            <div className="flex gap-4 text-xs" style={{ color: 'var(--muted)' }}>
+              <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
+              <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
+              <Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
+            </div>
           </div>
         </div>
       </footer>
