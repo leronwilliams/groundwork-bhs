@@ -18,6 +18,7 @@ model User {
   subscription    Subscription?
   orders          Order[]
   createdAt       DateTime         @default(now())
+  ContractorLead  ContractorLead[]
 }
 
 model Subscription {
@@ -35,18 +36,19 @@ model Subscription {
 }
 
 model Order {
-  id              String   @id @default(cuid())
-  userId          String
-  user            User     @relation(fields: [userId], references: [id])
-  type            String   // lead | estimate_single | estimate_full | boq | boq_hardware | boq_quotes | permit_prep | contract | tax_appeal
-  amount          Int      // in cents
-  status          String   @default("pending") // pending | paid | delivered | refunded
-  stripePaymentId String?
-  metadata        Json?
-  createdAt       DateTime @default(now())
-  updatedAt       DateTime @updatedAt
-  estimateResult  EstimateResult?
+  id               String            @id @default(cuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id])
+  type             String // lead | estimate_single | estimate_full | boq | boq_hardware | boq_quotes | permit_prep | contract | tax_appeal
+  amount           Int // in cents
+  status           String            @default("pending") // pending | paid | delivered | refunded
+  stripePaymentId  String?
+  metadata         Json?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  estimateResult   EstimateResult?
   boqQuoteRequests BOQQuoteRequest[]
+  contractorLeads  ContractorLead[]
 }
 
 model Project {
@@ -77,7 +79,7 @@ model Guide {
 }
 
 model Contractor {
-  id            String   @id @default(cuid())
+  id            String               @id @default(cuid())
   name          String
   trade         String
   island        String
@@ -86,11 +88,12 @@ model Contractor {
   website       String?
   description   String?
   imageUrl      String?
-  verified      Boolean  @default(false)
-  featuredTier  String?  // null | basic | featured | premium
-  monthlyFee    Int?     // in cents
+  verified      Boolean              @default(false)
+  featuredTier  String? // null | basic | featured | premium
+  monthlyFee    Int? // in cents
   stripeSubId   String?
-  listingStatus String   @default("active")
+  listingStatus String               @default("active")
+  interests     ContractorInterest[]
 }
 
 model AdvisorSession {
@@ -100,6 +103,34 @@ model AdvisorSession {
   messages  Json
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
+}
+
+model ContractorLead {
+  id              String               @id @default(cuid())
+  orderId         String?
+  userId          String
+  user            User                 @relation(fields: [userId], references: [id])
+  projectBrief    Json
+  island          String
+  tradesNeeded    String[]
+  budget          String?
+  timeline        String?
+  contractorsSent String[]
+  interests       ContractorInterest[]
+  status          String               @default("sent") // sent | interested | fulfilled
+  createdAt       DateTime             @default(now())
+  Order           Order?               @relation(fields: [orderId], references: [id])
+}
+
+// Tracks when a contractor expresses interest — client only sees contact AFTER this
+model ContractorInterest {
+  id             String         @id @default(cuid())
+  leadId         String
+  lead           ContractorLead @relation(fields: [leadId], references: [id])
+  contractorId   String
+  contractor     Contractor     @relation(fields: [contractorId], references: [id])
+  notifiedAt     DateTime       @default(now())
+  clientNotified Boolean        @default(false)
 }
 
 model HardwareStore {
@@ -149,7 +180,7 @@ model EstimateResult {
   fileUrl    String?
   brief      Json
   result     String   @db.Text
-  resultType String   // estimate | boq | boq_hardware
+  resultType String // estimate | boq | boq_hardware
   createdAt  DateTime @default(now())
 }
 
@@ -157,7 +188,7 @@ model AdvisorCache {
   id        String   @id @default(cuid())
   question  String   @db.Text
   answer    String   @db.Text
-  embedding Json?    // stored as JSON array of floats (text-embedding-3-small, 1536 dims)
+  embedding Json? // stored as JSON array of floats (text-embedding-3-small, 1536 dims)
   category  String?
   hitCount  Int      @default(0)
   createdAt DateTime @default(now())
