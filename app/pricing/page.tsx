@@ -14,7 +14,8 @@ const PLANS = [
     icon: Building2,
     borderColor: 'rgba(255,255,255,0.12)',
     accentColor: '#94a3b8',
-    badge: null,
+    badgeColor: '#94a3b8',
+    badge: null as string | null,
     cta: 'Create Free Account',
     ctaStyle: { background: 'transparent', color: 'var(--text-primary)', border: '1px solid rgba(255,255,255,0.2)' },
     href: '/sign-up',
@@ -28,7 +29,8 @@ const PLANS = [
     icon: Zap,
     borderColor: 'var(--cyan)',
     accentColor: 'var(--cyan)',
-    badge: 'Most Popular',
+    badge: 'Most Popular' as string | null,
+    badgeColor: 'var(--cyan)',
     cta: 'Start Pro',
     ctaStyle: { background: 'var(--cyan)', color: 'var(--navy)', border: 'none' },
   },
@@ -41,7 +43,8 @@ const PLANS = [
     icon: Wrench,
     borderColor: 'var(--amber)',
     accentColor: 'var(--amber)',
-    badge: 'Best Value',
+    badge: 'Best Value' as string | null,
+    badgeColor: 'var(--amber)',
     cta: 'Start Builder',
     ctaStyle: { background: 'var(--amber)', color: '#1a0f00', border: 'none' },
   },
@@ -95,7 +98,7 @@ export default function PricingPage() {
                 {plan.badge && (
                   <div
                     className="absolute top-0 inset-x-0 text-center text-xs font-bold py-1.5 tracking-widest uppercase"
-                    style={{ background: plan.accentColor, color: plan.key === 'builder' ? '#1a0f00' : 'var(--navy)' }}
+                    style={{ background: plan.badgeColor, color: plan.key === 'builder' ? '#1a0f00' : 'var(--navy)' }}
                   >
                     {plan.badge}
                   </div>
