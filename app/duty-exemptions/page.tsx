@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { SolarCalculator } from '@/components/ui/SolarCalculator'
 
 const DUTY_RATES = [
   { material: 'Cement (94lb bag)', duty: '0%', vat: '10%', note: 'Essential material — duty-free', exempt: true },
@@ -215,6 +216,9 @@ export default function DutyExemptionsPage() {
             <p className="font-bold mb-3" style={{ color: '#059669' }}>Building new? This is the best time to go solar.</p>
             <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>When constructing a new home, you can integrate solar into the roof structure, run conduit during framing, and orient the roof for maximum panel efficiency. Adding solar later is more expensive and disruptive. A 3kW system handles the average Bahamian home. Pair with battery storage for full grid independence.</p>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>BPL operates a net metering program — excess power is sold back to the grid. Contact BPL: <span style={{ color: 'var(--cyan)' }}>(242) 302-1000</span></p>
+          </div>
+          <div className="mt-8">
+            <SolarCalculator />
           </div>
         </section>
 

@@ -128,6 +128,65 @@ SOLAR INCENTIVE PROGRAM
 - BPL net metering: sell excess power back to the grid. Contact BPL: (242) 302-1000
 - Recommend all clients building new homes consider solar-ready construction (conduit routing, roof orientation)
 
+CONSTRUCTION FINANCING
+Bahamians have multiple financing options for construction. Always cover all options.
+
+NIB HOUSING LOAN:
+- Available to NIB contributors in good standing
+- Used for new construction, purchase, renovation, or land
+- Maximum approximately $100,000
+- Rates approximately 5-7%
+- Must be Bahamian citizen or permanent resident
+- Can be combined with personal savings
+- Apply at NIB Head Office, Farrington Road | Tel: (242) 502-1500
+- Processing 60-90 days
+
+BAHAMAS MORTGAGE CORPORATION (BMC):
+- Government-backed lender for Bahamian citizens
+- Programs: new construction, purchase, home improvement
+- Rates 5.5-7.5% — often lower than commercial banks
+- Maximum approximately $250,000 for construction
+- Income limits apply — aimed at working Bahamians
+- Has dedicated Family Island programs
+- Will consider applicants commercial banks decline
+- Address: Shirley Street, Nassau | Tel: (242) 322-5353
+- Processing 60-120 days
+
+COMMERCIAL BANKS:
+- Commonwealth Bank: most active residential lender
+- Fidelity Bank: strong for self-employed applicants
+- RBC Royal Bank: good for larger amounts
+- Scotiabank: competitive for government employees
+- First Caribbean: strong for commercial properties
+- Rates: prime + 1-3%
+- Terms: up to 30 years
+- Down payment: 10% for citizens, 20-30% for non-citizens
+- Pre-approval 30-60 days
+
+CONSTRUCTION LOAN DRAW PROCESS:
+- Funds released in 5 stages: foundation, structure, roof, lock-up, completion
+- Bank inspector required before each draw release
+- Interest only during construction phase
+- Converts to permanent mortgage on completion
+- Total process 12-24 months
+
+VENDOR FINANCING:
+- Common in Family Islands
+- Seller holds the mortgage directly
+- Always use a Bahamian attorney to document
+- Rates typically higher than institutional lenders
+- Useful when title issues exist or buyer cannot yet qualify
+
+GRANTS AND ASSISTANCE:
+- Department of Social Services: emergency housing assistance
+- Urban Renewal Commission: home repair grants for Nassau residents
+- Ministry of Housing: periodic affordable housing programs | Tel: (242) 322-6534
+
+STACKING FINANCING (key advice for working Bahamians $40k-$60k income):
+- NIB loan for land purchase + BMC or commercial bank mortgage for construction + personal savings for contingency
+- Apply for first-time homeowner duty exemption FIRST — reduces project cost $15,000-$40,000 which reduces mortgage needed
+- This combination is accessible but not widely known — sharing it is genuine public service
+
 LAND CLEARING
 - BEST Commission handles environmental permits for land clearing
 - Required when: wetlands within 100ft, coastal land, coppice >0.5 acres, any demolition
