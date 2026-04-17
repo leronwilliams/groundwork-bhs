@@ -47,6 +47,7 @@ model Order {
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   estimateResult   EstimateResult?
+  boqResultV2      BOQResultV2?
   boqQuoteRequests BOQQuoteRequest[]
   contractorLeads  ContractorLead[]
 }
@@ -131,6 +132,37 @@ model ContractorInterest {
   contractor     Contractor     @relation(fields: [contractorId], references: [id])
   notifiedAt     DateTime       @default(now())
   clientNotified Boolean        @default(false)
+}
+
+model PriceList {
+  id          String   @id @default(cuid())
+  itemCode    String   @unique
+  itemName    String
+  unit        String
+  unitPrice   Float
+  supplier    String?
+  lastUpdated DateTime @default(now())
+  updatedBy   String?
+  notes       String?
+}
+
+model BOQResultV2 {
+  id           String   @id @default(cuid())
+  orderId      String   @unique
+  order        Order    @relation(fields: [orderId], references: [id])
+  userId       String
+  fileUrl      String?
+  dimensions   Json
+  assessment   Json
+  lineItems    Json
+  summary      Json
+  reportUrl    String?
+  confidenceHigh  Float   @default(0)
+  confidenceMed   Float   @default(0)
+  confidenceLow   Float   @default(0)
+  totalLow     Float?
+  totalHigh    Float?
+  createdAt    DateTime @default(now())
 }
 
 model HardwareStore {
