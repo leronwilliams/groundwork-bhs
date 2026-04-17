@@ -384,7 +384,7 @@ export default async function HomePage() {
             <div className="text-sm" style={{ color: 'var(--muted)' }}>Build right. From the ground up.</div>
           </div>
           <div className="flex gap-6 text-sm font-medium flex-wrap justify-center" style={{ color: 'var(--text-secondary)' }}>
-            {['/guides', '/permits', '/property-tax', '/duty-exemptions', '/financing', '/contractors', '/advisor', '/services', '/pricing'].map(href => (
+            {['/guides', '/permits', '/property-tax', '/duty-exemptions', '/financing', '/partners', '/contractors', '/advisor', '/services', '/pricing'].map(href => (
               <Link key={href} href={href} className="hover:text-white transition-colors capitalize">
                 {href.replace('/', '')}
               </Link>

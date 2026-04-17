@@ -134,6 +134,60 @@ model ContractorInterest {
   clientNotified Boolean        @default(false)
 }
 
+model Partner {
+  id           String         @id @default(cuid())
+  businessName String
+  category     String
+  contactName  String
+  email        String
+  phone        String?
+  website      String?
+  logoUrl      String?
+  description  String?
+  island       String
+  tier         String         @default("basic")
+  monthlyFee   Int
+  stripeSubId  String?
+  active       Boolean        @default(false)
+  approved     Boolean        @default(false)
+  referralCode String         @unique
+  referralCount Int           @default(0)
+  adPlacements PartnerAd[]
+  referrals    PartnerReferral[]
+  createdAt    DateTime       @default(now())
+  updatedAt    DateTime       @updatedAt
+}
+
+model PartnerAd {
+  id         String   @id @default(cuid())
+  partnerId  String
+  partner    Partner  @relation(fields: [partnerId], references: [id])
+  placement  String
+  headline   String
+  tagline    String?
+  ctaText    String?
+  ctaUrl     String
+  logoUrl    String?
+  monthlyFee Int
+  stripeSubId String?
+  active     Boolean  @default(false)
+  impressions Int     @default(0)
+  clicks     Int      @default(0)
+  createdAt  DateTime @default(now())
+}
+
+model PartnerReferral {
+  id           String   @id @default(cuid())
+  partnerId    String
+  partner      Partner  @relation(fields: [partnerId], references: [id])
+  userId       String?
+  referralCode String
+  page         String
+  converted    Boolean  @default(false)
+  fee          Int?
+  createdAt    DateTime @default(now())
+}
+
 model PriceList {
   id          String   @id @default(cuid())
   itemCode    String   @unique

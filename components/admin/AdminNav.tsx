@@ -8,6 +8,7 @@ const NAV_ITEMS = [
   { href: '/admin/users', label: 'Users', icon: '👤' },
   { href: '/admin/content', label: 'Content', icon: '📝' },
   { href: '/admin/analytics', label: 'Analytics', icon: '📈' },
+  { href: '/admin/partners', label: 'Partners', icon: '🤝' },
 ]
 
 export function AdminNav() {
