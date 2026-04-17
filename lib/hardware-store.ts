@@ -16,7 +16,7 @@ const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
 // TEST MODE: all emails go here instead of real store addresses
 const TEST_RECIPIENT = 'leron@formartiq.com'
-const TEST_MODE = true // Set to false when real store emails are confirmed
+const TEST_MODE = false // Domain verified — emails route to real addresses
 
 export interface BOQLineItem {
   item: string
@@ -120,7 +120,7 @@ export async function sendBOQQuoteRequests(
     try {
       if (!resend) throw new Error('RESEND_API_KEY not configured')
       await resend.emails.send({
-        from: 'Groundwork BHS <noreply@groundworksbhs.com>',
+        from: 'Groundwork BHS <noreply@groundworksbhs.com>', // verified domain
         to: [recipient],
         replyTo: process.env.JARVIS_EMAIL || 'jarvis@formartiq.com',
         subject: `${subjectPrefix}BOQ Quote Request — Groundwork BHS [${req.orderId}]`,
