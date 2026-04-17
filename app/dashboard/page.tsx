@@ -1,5 +1,4 @@
 import { auth, currentUser } from '@clerk/nextjs/server'
-import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
@@ -38,7 +37,23 @@ const QUICK_ACTIONS = [
 
 export default async function DashboardPage() {
   const { userId } = await auth()
-  if (!userId) redirect('/sign-in')
+
+  // Unauthenticated — show sign-in CTA
+  if (!userId) {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--navy)' }}>
+        <div className="max-w-md w-full text-center p-12 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+          <div className="section-label mb-4">Dashboard</div>
+          <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Sign in to access your dashboard</h1>
+          <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>Track your orders, projects, and advisor sessions.</p>
+          <div className="flex flex-col gap-3">
+            <a href="/sign-in" className="block py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
+            <a href="/sign-up" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>Create Free Account</a>
+          </div>
+        </div>
+      </div>
+    )
+  }
 
   const user = await currentUser()
   const firstName = user?.firstName || 'there'
