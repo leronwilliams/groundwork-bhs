@@ -14,6 +14,7 @@
 
 import Anthropic from '@anthropic-ai/sdk'
 import OpenAI from 'openai'
+import { readPdfAsBase64 } from '@/lib/blob-read'
 import { runFormulaEngine, applyIslandPremium, FINISH_MULTIPLIERS } from './formulas'
 import type { ProjectDimensions } from './formulas'
 import type { DrawingAssessment } from './drawing-assessment'
@@ -296,8 +297,7 @@ export async function runDualTakeoff(
   let pdfBase64: string | null = null
   if (fileUrl && assessment.qualityScore >= 3) {
     try {
-      const r = await fetch(fileUrl)
-      if (r.ok) pdfBase64 = Buffer.from(await r.arrayBuffer()).toString('base64')
+      pdfBase64 = await readPdfAsBase64(fileUrl)
     } catch {}
   }
 

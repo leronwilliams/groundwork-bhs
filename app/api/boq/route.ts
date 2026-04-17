@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '@/lib/db'
 import { BOQ_SYSTEM_PROMPT } from '@/lib/estimation-prompt'
+import { readPdfAsBase64 } from '@/lib/blob-read'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -30,9 +31,8 @@ ${fileUrl ? `- Plans: ${fileUrl}` : '- No plans uploaded'}
 
     if (fileUrl) {
       try {
-        const pdfResponse = await fetch(fileUrl)
-        if (pdfResponse.ok) {
-          const pdfBase64 = Buffer.from(await pdfResponse.arrayBuffer()).toString('base64')
+        const pdfBase64 = await readPdfAsBase64(fileUrl)
+        if (pdfBase64) {
           messages.push({
             role: 'user',
             content: [

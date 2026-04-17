@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { prisma } from '@/lib/db'
 import { ESTIMATION_SYSTEM_PROMPT } from '@/lib/estimation-prompt'
+import { readPdfAsBase64 } from '@/lib/blob-read'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -37,11 +38,8 @@ ${fileUrl ? `- Plans uploaded: ${fileUrl}` : '- No plans uploaded (estimate base
     // If we have a file URL, fetch the PDF and include it as a document
     if (fileUrl) {
       try {
-        const pdfResponse = await fetch(fileUrl)
-        if (pdfResponse.ok) {
-          const pdfBuffer = await pdfResponse.arrayBuffer()
-          const pdfBase64 = Buffer.from(pdfBuffer).toString('base64')
-
+        const pdfBase64 = await readPdfAsBase64(fileUrl)
+        if (pdfBase64) {
           messages.push({
             role: 'user',
             content: [
@@ -60,7 +58,6 @@ ${fileUrl ? `- Plans uploaded: ${fileUrl}` : '- No plans uploaded (estimate base
             ],
           })
         } else {
-          // PDF fetch failed — fall back to brief only
           messages.push({ role: 'user', content: `Produce a detailed cost estimate based on the following project brief (plans were unavailable):\n\n${briefText}` })
         }
       } catch {

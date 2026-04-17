@@ -7,6 +7,7 @@
  */
 
 import Anthropic from '@anthropic-ai/sdk'
+import { readPdfAsBase64 } from '@/lib/blob-read'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
@@ -83,12 +84,8 @@ export async function assessDrawing(fileUrl: string | null): Promise<DrawingAsse
   }
 
   try {
-    // Fetch the PDF
-    const pdfResponse = await fetch(fileUrl)
-    if (!pdfResponse.ok) throw new Error(`Could not fetch file: ${pdfResponse.status}`)
-    
-    const pdfBuffer = await pdfResponse.arrayBuffer()
-    const pdfBase64 = Buffer.from(pdfBuffer).toString('base64')
+    const pdfBase64 = await readPdfAsBase64(fileUrl)
+    if (!pdfBase64) throw new Error('Could not read uploaded PDF')
 
     const response = await anthropic.messages.create({
       model: 'claude-opus-4-6',

@@ -24,11 +24,11 @@ export async function POST(req: NextRequest) {
     const filename = `plans/${Date.now()}-${file.name.replace(/[^a-z0-9._-]/gi, '_')}`
 
     const blob = await put(filename, file, {
-      access: 'public',
+      access: 'private',
       token: process.env.BLOB_READ_WRITE_TOKEN,
     })
 
-    return NextResponse.json({ url: blob.url, size: file.size, name: file.name })
+    return NextResponse.json({ url: blob.url, pathname: blob.pathname, size: file.size, name: file.name })
   } catch (error) {
     console.error('Upload error:', error)
     return NextResponse.json({ error: 'Upload failed' }, { status: 500 })
