@@ -20,6 +20,7 @@ interface BOQResult {
   trades: { trade: string; itemCount: number; subtotalLow: number; subtotalHigh: number }[]
   lineItems: LineItem[]
   reportUrl: string | null
+  dutySavings?: { totalDuty: number; exemptibleDuty: number; potentialSaving: number; isFirstTimeHomeowner: boolean; message: string }
 }
 
 export default function BOQWizardPage() {
@@ -42,6 +43,7 @@ export default function BOQWizardPage() {
   const [selectedItems, setSelectedItems] = useState<Set<string>>(new Set())
   const [shoppingList, setShoppingList] = useState<{ supplier: string; items: LineItem[]; subtotal: number }[] | null>(null)
   const [showWhySection, setShowWhySection] = useState(false)
+  const [isFirstTimeHomeowner, setIsFirstTimeHomeowner] = useState(false)
 
   async function handleFileSelect(f: File) {
     if (f.type !== 'application/pdf') { setError('Only PDF files accepted.'); return }
@@ -78,6 +80,7 @@ export default function BOQWizardPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           fileUrl,
+          isFirstTimeHomeowner,
           dimensions: {
             totalFloorArea: parseInt(dims.totalFloorArea) || 1500,
             numberOfFloors: parseInt(dims.numberOfFloors),
@@ -265,6 +268,17 @@ export default function BOQWizardPage() {
               ))}
             </div>
 
+            {/* First-time homeowner toggle */}
+            <div className="p-5 rounded-sm" style={{ background: 'rgba(5,150,105,0.06)', border: '1px solid rgba(5,150,105,0.4)' }}>
+              <label className="flex items-start gap-3 cursor-pointer">
+                <input type="checkbox" checked={isFirstTimeHomeowner} onChange={e => setIsFirstTimeHomeowner(e.target.checked)} className="mt-0.5" />
+                <div>
+                  <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>I am a first-time Bahamian homeowner</p>
+                  <p className="text-xs mt-1" style={{ color: 'var(--text-secondary)' }}>If this is your first home in the Bahamas, you may qualify for customs duty concessions on construction materials worth $15,000–$40,000. We will flag eligible items in your BOQ.</p>
+                </div>
+              </label>
+            </div>
+
             <div>
               <label style={labelStyle()}>Special Requirements</label>
               <textarea rows={2} value={dims.specialRequirements} onChange={e => setDims(p => ({ ...p, specialRequirements: e.target.value }))} placeholder="e.g. Hurricane impact windows, solar panel prep, cistern..." style={{ ...inputStyle(), resize: 'none' }} />
@@ -330,6 +344,29 @@ export default function BOQWizardPage() {
                 ))}
               </div>
             </div>
+
+            {/* Duty savings callout */}
+            {result.dutySavings && (
+              <div className="p-5 rounded-sm" style={{ background: result.dutySavings.isFirstTimeHomeowner ? 'rgba(5,150,105,0.06)' : 'rgba(0,212,245,0.04)', border: `1px solid ${result.dutySavings.isFirstTimeHomeowner ? 'rgba(5,150,105,0.4)' : 'var(--cyan-border)'}` }}>
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="font-bold text-sm mb-1" style={{ color: result.dutySavings.isFirstTimeHomeowner ? '#059669' : 'var(--cyan)' }}>
+                      {result.dutySavings.isFirstTimeHomeowner ? '✓ Duty Exemption Applied' : '💡 First-Time Homeowner?'}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{result.dutySavings.message}</p>
+                  </div>
+                  <div className="text-right shrink-0">
+                    <p className="text-2xl font-black" style={{ color: result.dutySavings.isFirstTimeHomeowner ? '#059669' : 'var(--cyan)' }}>
+                      ${result.dutySavings.potentialSaving.toLocaleString()}
+                    </p>
+                    <p className="text-xs" style={{ color: 'var(--muted)' }}>potential savings</p>
+                  </div>
+                </div>
+                {!result.dutySavings.isFirstTimeHomeowner && (
+                  <Link href="/duty-exemptions" className="inline-block mt-3 text-xs font-bold" style={{ color: 'var(--cyan)' }}>Learn about duty exemptions →</Link>
+                )}
+              </div>
+            )}
 
             {/* Trade summary */}
             <div>

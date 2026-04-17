@@ -14,6 +14,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { assessDrawing } from '@/lib/boq/drawing-assessment'
 import { runDualTakeoff } from '@/lib/boq/takeoff-engine'
+import { calculateTotalDutySavings } from '@/lib/boq/duty-rates'
 import { generateBOQReport } from '@/lib/boq/report-generator'
 import { put } from '@vercel/blob'
 import { prisma } from '@/lib/db'
@@ -29,7 +30,7 @@ export async function POST(req: NextRequest) {
       userId = (await auth()).userId
     } catch {}
 
-    const { orderId, fileUrl, dimensions, projectName } = await req.json()
+    const { orderId, fileUrl, dimensions, projectName, isFirstTimeHomeowner } = await req.json()
 
     if (!dimensions) {
       return NextResponse.json({ error: 'dimensions required' }, { status: 400 })
@@ -114,6 +115,11 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Calculate duty savings
+    const dutySavings = calculateTotalDutySavings(
+      takeoffResult.allItems.map(i => ({ itemCode: i.itemCode, quantity: i.quantity, unitPrice: i.unitPrice }))
+    )
+
     console.log('[BOQ-V2] Complete. Confidence:', takeoffResult.confidence)
 
     return NextResponse.json({
@@ -133,6 +139,13 @@ export async function POST(req: NextRequest) {
         takeoff: 'claude-opus-4-6',
         validation: 'gpt-4o',
         formula: 'groundwork-bahamas-v1',
+      },
+      dutySavings: {
+        ...dutySavings,
+        isFirstTimeHomeowner: !!isFirstTimeHomeowner,
+        message: isFirstTimeHomeowner
+          ? `You may save up to $${dutySavings.potentialSaving.toLocaleString()} in customs duty on exempt materials. Apply before importing.`
+          : `First-time homeowner? You could save up to $${dutySavings.potentialSaving.toLocaleString()} in customs duty. See /duty-exemptions.`,
       },
     })
   } catch (error) {
