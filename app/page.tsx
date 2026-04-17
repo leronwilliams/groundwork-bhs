@@ -157,17 +157,20 @@ export default async function HomePage() {
             Renovation projects across Nassau and the Family Islands — from concept to completion.
           </p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Exterior: neglected → renovated tropical */}
             <BeforeAfter
-              beforeSrc="https://images.pexels.com/photos/1797428/pexels-photo-1797428.jpeg?auto=compress&cs=tinysrgb&w=800"
-              afterSrc={galleryImages[0]}
+              beforeSrc="https://images.pexels.com/photos/10320592/pexels-photo-10320592.jpeg?auto=compress&cs=tinysrgb&w=800"
+              afterSrc="https://images.pexels.com/photos/34569496/pexels-photo-34569496.jpeg?auto=compress&cs=tinysrgb&w=800"
             />
+            {/* Kitchen: outdated cabinets → modern remodel */}
             <BeforeAfter
-              beforeSrc="https://images.pexels.com/photos/2523959/pexels-photo-2523959.jpeg?auto=compress&cs=tinysrgb&w=800"
-              afterSrc={galleryImages[1]}
+              beforeSrc="https://images.pexels.com/photos/5008398/pexels-photo-5008398.jpeg?auto=compress&cs=tinysrgb&w=800"
+              afterSrc="https://images.pexels.com/photos/5353881/pexels-photo-5353881.jpeg?auto=compress&cs=tinysrgb&w=800"
             />
+            {/* Bathroom: old tiles → modern renovation */}
             <BeforeAfter
-              beforeSrc="https://images.pexels.com/photos/259580/pexels-photo-259580.jpeg?auto=compress&cs=tinysrgb&w=800"
-              afterSrc={galleryImages[2]}
+              beforeSrc="https://images.pexels.com/photos/18644893/pexels-photo-18644893.jpeg?auto=compress&cs=tinysrgb&w=800"
+              afterSrc="https://images.pexels.com/photos/35868666/pexels-photo-35868666.jpeg?auto=compress&cs=tinysrgb&w=800"
             />
           </div>
         </div>
