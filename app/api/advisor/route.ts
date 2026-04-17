@@ -6,28 +6,85 @@ import { getEmbedding, findSimilarQuestion, cacheAnswer, incrementCacheHit } fro
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 
+const FREE_TIER_LIMIT = 5
+const ANON_LIMIT = 2
+
 export async function POST(req: NextRequest) {
   try {
-    const { messages, sessionId } = await req.json()
+    const { messages, sessionId, anonCount } = await req.json()
 
     if (!messages || !Array.isArray(messages) || messages.length === 0) {
       return NextResponse.json({ error: 'Invalid messages' }, { status: 400 })
     }
 
-    // Extract the latest user question
+    // ─── USAGE LIMITS ─────────────────────────────────────────────────────
+    let userId: string | null = null
+    let tier = 'free'
+    let dbUser = null
+
+    try {
+      const { auth } = await import('@clerk/nextjs/server')
+      const a = await auth()
+      userId = a.userId
+    } catch {}
+
+    if (userId) {
+      dbUser = await prisma.user.findFirst({
+        where: { clerkId: userId },
+        include: { subscription: true },
+      })
+      tier = dbUser?.subscription?.tier || 'free'
+    }
+
+    // Unauthenticated: allow 2 questions
+    if (!userId) {
+      const count = typeof anonCount === 'number' ? anonCount : 0
+      if (count >= ANON_LIMIT) {
+        return NextResponse.json({
+          limitReached: true,
+          limitType: 'anon',
+          message: 'Create a free account to continue asking questions.',
+          signUpUrl: '/sign-up',
+        }, { status: 402 })
+      }
+    }
+
+    // Free tier: 5 sessions per calendar month
+    if (userId && tier === 'free') {
+      const startOfMonth = new Date()
+      startOfMonth.setDate(1)
+      startOfMonth.setHours(0, 0, 0, 0)
+
+      const sessionCount = dbUser ? await prisma.advisorSession.count({
+        where: { userId: dbUser.id, createdAt: { gte: startOfMonth } },
+      }) : 0
+
+      if (sessionCount >= FREE_TIER_LIMIT) {
+        return NextResponse.json({
+          limitReached: true,
+          limitType: 'free',
+          sessionsUsed: sessionCount,
+          sessionsLimit: FREE_TIER_LIMIT,
+          message: `You've used your ${FREE_TIER_LIMIT} free sessions this month. Upgrade to Pro for unlimited access.`,
+          upgradeUrl: '/pricing',
+        }, { status: 402 })
+      }
+    }
+
+    // Pro/Builder: no limits, no checks needed
+
+    // ─── EXTRACT QUESTION ──────────────────────────────────────────────────
     const lastUserMessage = [...messages].reverse().find((m: { role: string }) => m.role === 'user')
     const question = lastUserMessage?.content?.trim() || ''
 
-    // ─── SEMANTIC CACHE CHECK ───────────────────────────────────────────────
+    // ─── SEMANTIC CACHE CHECK ─────────────────────────────────────────────
     if (question && process.env.OPENAI_API_KEY) {
       try {
         const embedding = await getEmbedding(question)
         const cached = await findSimilarQuestion(embedding, 0.92)
 
         if (cached) {
-          // Cache HIT — return immediately, no Claude call
           await incrementCacheHit(cached.id)
-
           return new Response(cached.answer, {
             headers: {
               'Content-Type': 'text/plain; charset=utf-8',
@@ -37,7 +94,7 @@ export async function POST(req: NextRequest) {
           })
         }
 
-        // Cache MISS — call Claude, stream, then cache result
+        // Cache MISS — call Claude, stream, cache, save session
         const readable = new ReadableStream({
           async start(controller) {
             let fullText = ''
@@ -46,14 +103,12 @@ export async function POST(req: NextRequest) {
                 role: m.role as 'user' | 'assistant',
                 content: m.content,
               }))
-
               const stream = await anthropic.messages.stream({
                 model: 'claude-sonnet-4-6',
                 max_tokens: 2048,
                 system: ADVISOR_SYSTEM_PROMPT,
                 messages: anthropicMessages,
               })
-
               for await (const chunk of stream) {
                 if (chunk.type === 'content_block_delta' && chunk.delta.type === 'text_delta') {
                   const text = chunk.delta.text
@@ -64,24 +119,23 @@ export async function POST(req: NextRequest) {
             } finally {
               controller.close()
             }
-
-            // Post-stream: cache the answer
             if (fullText && question) {
               try {
-                await cacheAnswer(question, fullText, embedding)
-              } catch (cacheErr) {
-                console.error('Cache write error:', cacheErr)
-              }
+                const emb = await getEmbedding(question)
+                await cacheAnswer(question, fullText, emb)
+              } catch {}
             }
-
-            // Save session if provided
             if (sessionId && fullText) {
               try {
                 const updatedMessages = [...messages, { role: 'assistant', content: fullText }]
                 await prisma.advisorSession.upsert({
                   where: { id: sessionId },
                   update: { messages: updatedMessages },
-                  create: { id: sessionId, messages: updatedMessages },
+                  create: {
+                    id: sessionId,
+                    userId: dbUser?.id || null,
+                    messages: updatedMessages,
+                  },
                 })
               } catch {}
             }
@@ -96,13 +150,12 @@ export async function POST(req: NextRequest) {
             'X-Cache': 'MISS',
           },
         })
-      } catch (embeddingErr) {
-        console.error('Embedding error, falling back to direct Claude:', embeddingErr)
-        // Fall through to direct Claude call below
+      } catch {
+        // Fall through to direct Claude call
       }
     }
 
-    // ─── FALLBACK: Direct Claude call (no embedding) ─────────────────────────
+    // ─── FALLBACK: Direct Claude call ─────────────────────────────────────
     const anthropicMessages = messages.map((m: { role: string; content: string }) => ({
       role: m.role as 'user' | 'assistant',
       content: m.content,
@@ -125,18 +178,20 @@ export async function POST(req: NextRequest) {
             controller.enqueue(new TextEncoder().encode(text))
           }
         }
-
         if (sessionId && fullText) {
           try {
             const updatedMessages = [...messages, { role: 'assistant', content: fullText }]
             await prisma.advisorSession.upsert({
               where: { id: sessionId },
               update: { messages: updatedMessages },
-              create: { id: sessionId, messages: updatedMessages },
+              create: {
+                id: sessionId,
+                userId: dbUser?.id || null,
+                messages: updatedMessages,
+              },
             })
           } catch {}
         }
-
         controller.close()
       },
     })
