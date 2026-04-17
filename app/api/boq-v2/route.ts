@@ -63,7 +63,7 @@ export async function POST(req: NextRequest) {
       const blob = await put(
         `boq-reports/${orderId || 'test'}-${Date.now()}.pdf`,
         Buffer.from(pdfBytes),
-        { access: 'public', token: process.env.BLOB_READ_WRITE_TOKEN }
+        { access: 'private', token: process.env.BLOB_READ_WRITE_TOKEN }
       )
       reportUrl = blob.url
     } catch (blobErr) {
