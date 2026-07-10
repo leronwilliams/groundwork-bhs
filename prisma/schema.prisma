@@ -1,0 +1,415 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  firstName String?
+  lastName  String?
+  phone     String?
+  role      UserRole @default(HOMEOWNER)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  projects           Project[]
+  contractorProfile Contractor?
+  reviews            Review[]
+  advisorSessions    AdvisorSession[]
+  communityPosts     CommunityPost[]
+  communityComments  CommunityComment[]
+  subscriptions      Subscription[]
+  orders             Order[]
+
+  @@map("users")
+}
+
+model Project {
+  id             String         @id @default(cuid())
+  userId         String         @map("user_id")
+  projectType    String         @map("project_type")
+  island         String
+  area           String
+  propertyType   String         @map("property_type")
+  budgetRange    String         @map("budget_range")
+  squareFootage  Int?           @map("square_footage")
+  description    String
+  startTimeline  String         @map("start_timeline")
+  hasPermit      String         @map("has_permit")
+  needFinancing  String?        @map("need_financing")
+  photos         String[]       @default([])
+  status         ProjectStatus  @default(OPEN)
+  createdAt      DateTime       @default(now()) @map("created_at")
+  updatedAt      DateTime       @updatedAt @map("updated_at")
+
+  // Relations
+  user     User         @relation(fields: [userId], references: [id])
+  leads    Lead[]
+  matches  Match[]
+  reviews  Review[]
+  boqQuoteRequests BOQQuoteRequest[]
+
+  @@map("projects")
+}
+
+model Contractor {
+  id                String           @id @default(cuid())
+  userId            String           @unique @map("user_id")
+  businessName      String           @map("business_name")
+  contactName       String           @map("contact_name")
+  email             String
+  phone             String
+  whatsapp          String?
+  islandsServed     String[]         @map("islands_served")
+  trades            String[]
+  tier              ContractorTier   @default(FREE)
+  status            ContractorStatus @default(ACCEPTING_LEADS)
+  licenseUrl        String?          @map("license_url")
+  insuranceUrl      String?          @map("insurance_url")
+  portfolio         Json?            // Array of {url: string, description: string}
+  stripeCustomerId  String?          @map("stripe_customer_id")
+  subscriptionStatus String?         @map("subscription_status")
+  createdAt         DateTime         @default(now()) @map("created_at")
+  updatedAt         DateTime         @updatedAt @map("updated_at")
+
+  // Relations
+  user     User   @relation(fields: [userId], references: [id])
+  leads    Lead[]
+  matches  Match[]
+  reviews  Review[]
+  contractorLeads ContractorLead[]
+
+  @@map("contractors")
+}
+
+model Lead {
+  id            String      @id @default(cuid())
+  projectId     String      @map("project_id")
+  contractorId  String      @map("contractor_id")
+  status        LeadStatus  @default(PURCHASED)
+  purchasePrice Decimal     @map("purchase_price")
+  purchaseDate  DateTime    @default(now()) @map("purchase_date")
+  expiresAt     DateTime    @map("expires_at")
+  createdAt     DateTime    @default(now()) @map("created_at")
+  updatedAt     DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  project    Project    @relation(fields: [projectId], references: [id])
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+
+  @@map("leads")
+}
+
+model Match {
+  id               String            @id @default(cuid())
+  projectId        String            @map("project_id")
+  contractorId     String            @map("contractor_id")
+  notificationSent Boolean           @default(false) @map("notification_sent")
+  notificationMethod NotificationMethod? @map("notification_method")
+  openedAt         DateTime?         @map("opened_at")
+  purchasedAt      DateTime?         @map("purchased_at")
+  createdAt        DateTime          @default(now()) @map("created_at")
+
+  // Relations
+  project    Project    @relation(fields: [projectId], references: [id])
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+
+  @@unique([projectId, contractorId])
+  @@map("matches")
+}
+
+model Review {
+  id           String    @id @default(cuid())
+  contractorId String    @map("contractor_id")
+  projectId    String?   @map("project_id")
+  userId       String    @map("user_id")
+  reviewerName String    @map("reviewer_name")
+  rating       Int
+  text         String
+  verified     Boolean   @default(false)
+  createdAt    DateTime  @default(now()) @map("created_at")
+
+  // Relations
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+  project    Project?   @relation(fields: [projectId], references: [id])
+  user       User       @relation(fields: [userId], references: [id])
+
+  @@map("reviews")
+}
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @map("user_id")
+  stripeSubscriptionId String             @map("stripe_subscription_id")
+  status               SubscriptionStatus @default(INCOMPLETE)
+  priceId              String             @map("price_id")
+  currentPeriodStart   DateTime           @map("current_period_start")
+  currentPeriodEnd     DateTime           @map("current_period_end")
+  cancelAtPeriodEnd    Boolean            @default(false) @map("cancel_at_period_end")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("subscriptions")
+}
+
+model Order {
+  id              String      @id @default(cuid())
+  userId          String      @map("user_id")
+  stripePaymentId String?     @map("stripe_payment_id")
+  amount          Decimal
+  status          OrderStatus @default(PENDING)
+  type            OrderType
+  description     String
+  createdAt       DateTime    @default(now()) @map("created_at")
+  updatedAt       DateTime    @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("orders")
+}
+
+model AdvisorSession {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  projectId String?  @map("project_id")
+  messages  Json     // Array of {role: string, content: string}
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user User @relation(fields: [userId], references: [id])
+
+  @@map("advisor_sessions")
+}
+
+model AdvisorCache {
+  id        String   @id @default(cuid())
+  query     String
+  embedding Json?    // Vector embedding for semantic search
+  response  String
+  metadata  Json?
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("advisor_cache")
+}
+
+model CommunityPost {
+  id        String   @id @default(cuid())
+  userId    String   @map("user_id")
+  title     String
+  content   String
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  user     User              @relation(fields: [userId], references: [id])
+  comments CommunityComment[]
+
+  @@map("community_posts")
+}
+
+model CommunityComment {
+  id        String   @id @default(cuid())
+  postId    String   @map("post_id")
+  userId    String   @map("user_id")
+  content   String
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  post CommunityPost @relation(fields: [postId], references: [id])
+  user User          @relation(fields: [userId], references: [id])
+
+  @@map("community_comments")
+}
+
+model BOQQuoteRequest {
+  id            String    @id @default(cuid())
+  projectId     String    @map("project_id")
+  drawingUrls   String[]  @map("drawing_urls")
+  status        String    @default("pending")
+  result        Json?     // Parsed BOQ result
+  createdAt     DateTime  @default(now()) @map("created_at")
+  updatedAt     DateTime  @updatedAt @map("updated_at")
+
+  // Relations
+  project   Project          @relation(fields: [projectId], references: [id])
+  responses BOQQuoteResponse[]
+
+  @@map("boq_quote_requests")
+}
+
+model BOQQuoteResponse {
+  id              String   @id @default(cuid())
+  requestId       String   @map("request_id")
+  contractorId    String?  @map("contractor_id")
+  price           Decimal?
+  notes           String?
+  lineItems       Json?    @map("line_items")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  // Relations
+  request    BOQQuoteRequest @relation(fields: [requestId], references: [id])
+
+  @@map("boq_quote_responses")
+}
+
+model ContractorLead {
+  id           String   @id @default(cuid())
+  contractorId String   @map("contractor_id")
+  source       String
+  status       String   @default("new")
+  notes        String?
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  contractor Contractor @relation(fields: [contractorId], references: [id])
+
+  @@map("contractor_leads")
+}
+
+model HardwareStore {
+  id          String   @id @default(cuid())
+  name        String
+  island      String
+  area        String
+  phone       String?
+  email       String?
+  website     String?
+  logoUrl     String?  @map("logo_url")
+  priceListId String?  @map("price_list_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("hardware_stores")
+}
+
+model PriceList {
+  id        String   @id @default(cuid())
+  storeId   String   @map("store_id")
+  items     Json     // Array of {sku, name, unitPrice, unit, category}
+  validFrom DateTime @map("valid_from")
+  validTo   DateTime? @map("valid_to")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("price_lists")
+}
+
+model Partner {
+  id          String   @id @default(cuid())
+  name        String
+  type        String   // supplier, lender, insurer, etc.
+  description String?
+  logoUrl     String?  @map("logo_url")
+  website     String?
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  ads PartnerAd[]
+
+  @@map("partners")
+}
+
+model PartnerAd {
+  id        String   @id @default(cuid())
+  partnerId String   @map("partner_id")
+  title     String
+  content   String
+  imageUrl  String?  @map("image_url")
+  ctaUrl    String?  @map("cta_url")
+  active    Boolean  @default(true)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  // Relations
+  partner Partner @relation(fields: [partnerId], references: [id])
+
+  @@map("partner_ads")
+}
+
+model PexelsCache {
+  id        String   @id @default(cuid())
+  query     String   @unique
+  results   Json     // Array of Pexels photo/video objects
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("pexels_cache")
+}
+
+// Enums
+enum UserRole {
+  HOMEOWNER
+  CONTRACTOR
+  ADMIN
+}
+
+enum ProjectStatus {
+  OPEN
+  MATCHED
+  CLOSED
+  EXPIRED
+}
+
+enum ContractorTier {
+  FREE
+  VERIFIED
+  BUILDER
+}
+
+enum ContractorStatus {
+  ACCEPTING_LEADS
+  PAUSED
+}
+
+enum LeadStatus {
+  PURCHASED
+  CONTACTED
+  QUOTED
+  WON
+  LOST
+  EXPIRED
+}
+
+enum NotificationMethod {
+  EMAIL
+  SMS
+  IN_APP
+}
+
+enum SubscriptionStatus {
+  INCOMPLETE
+  INCOMPLETE_EXPIRED
+  TRIALING
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  UNPAID
+  PAUSED
+}
+
+enum OrderStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum OrderType {
+  LEAD_PURCHASE
+  SUBSCRIPTION
+  VERIFICATION
+  BOQ_QUOTE
+}
