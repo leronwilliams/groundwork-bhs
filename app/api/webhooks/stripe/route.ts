@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { stripe } from '@/lib/stripe'
 import type Stripe from 'stripe'
 import { prisma } from '@/lib/db'
+import { createAndDispatchLead } from '@/lib/leads'
 
 export const runtime = 'nodejs'
 
@@ -66,7 +67,7 @@ export async function POST(req: NextRequest) {
           })
         } else {
           // Record one-time order as paid
-          await prisma.order.create({
+          const order = await prisma.order.create({
             data: {
               userId: user.id,
               type: priceKey || 'unknown',
@@ -76,6 +77,36 @@ export async function POST(req: NextRequest) {
               metadata: session.metadata || {},
             },
           })
+
+          // Fulfil a paid contractor lead: the post-project form stashes the
+          // project brief in checkout metadata for Free/Pro users. Match +
+          // notify contractors now that payment has cleared.
+          if (priceKey === 'lead') {
+            const m = session.metadata || {}
+            const tradesNeeded = (m.trades || '')
+              .split(',')
+              .map(t => t.trim())
+              .filter(Boolean)
+            if (m.island && tradesNeeded.length > 0) {
+              const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || 'https://www.groundworksbhs.com'
+              await createAndDispatchLead({
+                dbUserId: user.id,
+                clientName: user.name,
+                orderId: order.id,
+                brief: {
+                  island: m.island,
+                  projectType: m.projectType || null,
+                  tradesNeeded,
+                  budget: m.budget || null,
+                  timeline: m.timeline || null,
+                  notes: m.notes || null,
+                },
+                baseUrl,
+              })
+            } else {
+              console.error('Paid lead order missing island/trades metadata:', order.id)
+            }
+          }
         }
         break
       }

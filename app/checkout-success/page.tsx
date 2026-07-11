@@ -40,6 +40,8 @@ function SuccessContent() {
         <p className="mb-8 text-sm" style={{ color: 'var(--muted)' }}>
           {isSubscription
             ? 'Your subscription is now active. You have full access to all features in your plan.'
+            : type === 'lead'
+            ? 'Your project has been sent to matching contractors on your island. We\'ll notify you and show their contact details in your dashboard the moment one expresses interest.'
             : 'Your order has been received. We will deliver your document within 1–2 business days.'}
         </p>
         <div className="flex flex-col gap-3">

@@ -2,7 +2,7 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
-import { FileText, Calculator, Users, MessageSquare, Home, Download, ArrowRight, CheckCircle, Clock, Package, AlertCircle, Zap } from 'lucide-react'
+import { FileText, Calculator, Users, MessageSquare, Home, Download, ArrowRight, CheckCircle, Clock, Package, AlertCircle, Zap, Send, Phone, Mail, Globe, Inbox } from 'lucide-react'
 
 const ORDER_LABELS: Record<string, string> = {
   lead: 'Contractor Lead',
@@ -27,6 +27,7 @@ const STATUS_BADGE: Record<string, { label: string; color: string; icon: LucideI
 const STAGE_LABELS = ['Planning', 'Design', 'Permits', 'Foundation', 'Structure', 'Finishing', 'Complete']
 
 const QUICK_ACTIONS = [
+  { label: 'Post a Project', href: '/post-project', icon: Send as LucideIcon, accent: 'var(--cyan)', desc: 'Get matched to verified contractors' },
   { label: 'Upload Plans for Estimate', href: '/estimate/new', icon: Calculator as LucideIcon, accent: 'var(--cyan)', desc: 'Get a professional cost estimate' },
   { label: 'Get a Bill of Quantities', href: '/services', icon: FileText as LucideIcon, accent: '#6366f1', desc: 'Full itemised material list' },
   { label: 'Find a Contractor', href: '/contractors', icon: Users as LucideIcon, accent: 'var(--amber)', desc: 'Matched to your trade & island' },
@@ -65,12 +66,18 @@ export default async function DashboardPage() {
       subscription: true,
       orders: { orderBy: { createdAt: 'desc' }, take: 10, include: { estimateResult: true } },
       projects: { orderBy: { createdAt: 'desc' }, take: 5 },
+      ContractorLead: {
+        orderBy: { createdAt: 'desc' },
+        take: 10,
+        include: { interests: { include: { contractor: true } } },
+      },
     },
   })
 
   const tier = dbUser?.subscription?.tier || 'free'
   const orders = dbUser?.orders || []
   const projects = dbUser?.projects || []
+  const leads = dbUser?.ContractorLead || []
 
   // Advisor session count this month (from AdvisorSession table)
   const startOfMonth = new Date()
@@ -289,6 +296,72 @@ export default async function DashboardPage() {
                   </div>
                 </div>
               ))}
+            </div>
+          )}
+        </div>
+
+        {/* Contractor Requests */}
+        <div className="mb-12">
+          <div className="flex items-center justify-between mb-6">
+            <div className="section-label">My Contractor Requests</div>
+            <Link href="/post-project" className="text-xs font-bold px-3 py-1.5 rounded-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>
+              Post a Project →
+            </Link>
+          </div>
+          {leads.length === 0 ? (
+            <div className="p-8 rounded-sm text-center" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+              <Users size={36} style={{ color: 'var(--muted)', margin: '0 auto 12px' }} strokeWidth={1.5} />
+              <p className="font-bold mb-1" style={{ color: 'var(--text-primary)' }}>No contractor requests yet</p>
+              <p className="text-sm mb-4" style={{ color: 'var(--muted)' }}>Post a project and we&apos;ll match you with verified contractors on your island.</p>
+              <Link href="/post-project" className="inline-block px-5 py-2 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Post a Project</Link>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {leads.map(lead => {
+                const brief = lead.projectBrief as { projectType?: string | null } | null
+                const interests = lead.interests || []
+                return (
+                  <div key={lead.id} className="p-5 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+                    <div className="flex items-start justify-between mb-3 gap-4">
+                      <div className="min-w-0">
+                        <p className="font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                          {brief?.projectType || 'Construction Project'} · {lead.island}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--muted)' }}>
+                          {lead.tradesNeeded.join(', ')} · sent to {lead.contractorsSent.length} contractor{lead.contractorsSent.length === 1 ? '' : 's'} · {new Date(lead.createdAt).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}
+                        </p>
+                      </div>
+                      <span className="flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-sm shrink-0"
+                        style={{ background: interests.length > 0 ? 'rgba(5,150,105,0.18)' : 'rgba(0,212,245,0.15)', color: interests.length > 0 ? '#059669' : 'var(--cyan)' }}>
+                        {interests.length > 0 ? <><CheckCircle size={11} strokeWidth={2} /> {interests.length} interested</> : <><Clock size={11} strokeWidth={2} /> Awaiting interest</>}
+                      </span>
+                    </div>
+
+                    {interests.length > 0 ? (
+                      <div className="space-y-2 mt-3">
+                        {interests.map(interest => {
+                          const c = interest.contractor
+                          return (
+                            <div key={interest.id} className="p-3 rounded-sm" style={{ background: 'var(--navy-card)', border: '1px solid rgba(5,150,105,0.25)' }}>
+                              <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{c.name}</p>
+                              <p className="text-xs mb-2" style={{ color: 'var(--muted)' }}>{c.trade} · {c.island}</p>
+                              <div className="flex gap-4 text-xs flex-wrap">
+                                {c.phone && <a href={`tel:${c.phone}`} className="flex items-center gap-1" style={{ color: 'var(--cyan)' }}><Phone size={11} /> {c.phone}</a>}
+                                {c.email && <a href={`mailto:${c.email}`} className="flex items-center gap-1" style={{ color: 'var(--cyan)' }}><Mail size={11} /> {c.email}</a>}
+                                {c.website && <a href={c.website} target="_blank" rel="noopener noreferrer" className="flex items-center gap-1" style={{ color: 'var(--cyan)' }}><Globe size={11} /> Website</a>}
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    ) : (
+                      <p className="flex items-center gap-2 text-xs mt-2" style={{ color: 'var(--muted)' }}>
+                        <Inbox size={12} /> We&apos;ll email you and show contractor contact details here as soon as one expresses interest.
+                      </p>
+                    )}
+                  </div>
+                )
+              })}
             </div>
           )}
         </div>

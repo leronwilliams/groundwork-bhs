@@ -10,6 +10,7 @@ const NAV_LINKS = [
   { href: '/permits', label: 'Permits' },
   { href: '/property-tax', label: 'Property Tax' },
   { href: '/contractors', label: 'Contractors' },
+  { href: '/post-project', label: 'Post a Project' },
   { href: '/services', label: 'Services' },
   { href: '/advisor', label: 'Advisor' },
 ]
