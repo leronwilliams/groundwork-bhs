@@ -81,10 +81,13 @@ model Guide {
 
 model Contractor {
   id            String               @id @default(cuid())
+  userId        String?              @unique // links a self-signup to their Clerk account
   name          String
+  contactName   String? // person to contact (business name stays in `name`)
   trade         String
   island        String
   phone         String?
+  whatsapp      String?
   email         String?
   website       String?
   description   String?
@@ -93,8 +96,22 @@ model Contractor {
   featuredTier  String? // null | basic | featured | premium
   monthlyFee    Int? // in cents
   stripeSubId   String?
-  listingStatus String               @default("active")
+  listingStatus String               @default("active") // active | pending (self-signup awaiting admin approval)
   interests     ContractorInterest[]
+  reviews       Review[]
+}
+
+model Review {
+  id           String     @id @default(cuid())
+  contractorId String
+  contractor   Contractor @relation(fields: [contractorId], references: [id])
+  authorUserId String? // DB user id if the reviewer was signed in
+  authorName   String
+  rating       Int // 1–5, enforced in the API layer (Zod)
+  comment      String?
+  createdAt    DateTime   @default(now())
+
+  @@index([contractorId])
 }
 
 model AdvisorSession {
