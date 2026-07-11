@@ -8,7 +8,10 @@ import Link from 'next/link'
 export const revalidate = 60
 
 export default async function ContractorsPage() {
-  const contractors = await prisma.contractor.findMany({ orderBy: [{ featuredTier: 'asc' }, { name: 'asc' }] })
+  const contractors = await prisma.contractor.findMany({
+    where: { listingStatus: 'active' },
+    orderBy: [{ featuredTier: 'asc' }, { name: 'asc' }],
+  })
 
   const featured = contractors.filter(c => c.featuredTier)
   const regular = contractors.filter(c => !c.featuredTier)
@@ -70,6 +73,7 @@ export default async function ContractorsPage() {
                         {c.email && <a href={`mailto:${c.email}`} style={{ color: 'var(--cyan)' }}>{c.email}</a>}
                         {c.website && <a href={c.website} target="_blank" rel="noopener noreferrer" style={{ color: 'var(--cyan)' }}>Website →</a>}
                       </div>
+                      <Link href={`/contractors/${c.id}`} className="inline-block mt-3 text-sm font-semibold" style={{ color: 'var(--amber)' }}>View profile &amp; reviews →</Link>
                     </div>
                   </div>
                 </div>
@@ -98,6 +102,7 @@ export default async function ContractorsPage() {
                       {c.phone && <a href={`tel:${c.phone}`} style={{ color: 'var(--cyan)' }}>{c.phone}</a>}
                       {c.email && <a href={`mailto:${c.email}`} style={{ color: 'var(--cyan)' }}>{c.email}</a>}
                     </div>
+                    <Link href={`/contractors/${c.id}`} className="inline-block mt-3 text-sm font-semibold" style={{ color: 'var(--cyan)' }}>View profile &amp; reviews →</Link>
                   </div>
                 </BlueprintCard>
               ))}
@@ -138,11 +143,11 @@ export default async function ContractorsPage() {
             List your business on Groundwork and reach homeowners and developers across the Bahamas.
           </p>
           <Link
-            href="/advisor"
+            href="/become-a-contractor"
             className="inline-block px-6 py-3 rounded-sm font-semibold"
             style={{ background: 'var(--cyan)', color: 'var(--navy)' }}
           >
-            Contact us to list
+            List your business
           </Link>
         </div>
       </div>
