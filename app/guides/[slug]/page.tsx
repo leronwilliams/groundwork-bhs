@@ -1,5 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
+import Image from 'next/image'
+import { guideImage } from '@/lib/site-images'
 import { prisma } from '@/lib/db'
 import { SectionBadge } from '@/components/ui/SectionBadge'
 import { IslandTag } from '@/components/ui/IslandTag'
@@ -19,6 +21,7 @@ export default async function GuideDetailPage({ params }: Params) {
   ])
 
   if (!guide) notFound()
+  const image = guideImage(guide.slug, guide.category)
 
   return (
     <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: 'var(--navy)' }}>
@@ -35,9 +38,15 @@ export default async function GuideDetailPage({ params }: Params) {
               {guide.title}
             </h1>
 
-            {guide.imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={guide.imageUrl} alt={guide.title} className="w-full h-64 object-cover rounded-sm mb-8" />
+            {image && (
+              <figure className="mb-8">
+                <div className="relative w-full h-64 md:h-80 overflow-hidden rounded-sm">
+                  <Image src={image.src} alt={image.alt} fill priority sizes="(min-width: 1024px) 75vw, 100vw" className="object-cover" />
+                </div>
+                <figcaption className="mt-2 text-xs" style={{ color: 'var(--muted)' }}>
+                  {image.place}. Photo: {image.author} ({image.license}) — <Link href="/credits" className="underline">credits</Link>
+                </figcaption>
+              </figure>
             )}
 
             <div

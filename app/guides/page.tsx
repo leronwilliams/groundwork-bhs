@@ -1,4 +1,6 @@
 import Link from 'next/link'
+import Image from 'next/image'
+import { guideImage } from '@/lib/site-images'
 import { prisma } from '@/lib/db'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
 import { SectionBadge } from '@/components/ui/SectionBadge'
@@ -36,19 +38,24 @@ export default async function GuidesPage() {
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {guides.map(guide => (
+            {guides.map(guide => {
+              const image = guideImage(guide.slug, guide.category)
+              return (
               <Link key={guide.id} href={`/guides/${guide.slug}`}>
                 <BlueprintCard
                   category={guide.category}
                   island={guide.island !== 'all' ? guide.island : undefined}
                 >
-                  {guide.imageUrl && (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={guide.imageUrl}
-                      alt={guide.title}
-                      className="w-full h-40 object-cover rounded-sm mb-4"
-                    />
+                  {image && (
+                    <div className="relative w-full h-40 mb-4 overflow-hidden rounded-sm">
+                      <Image
+                        src={image.src}
+                        alt={image.alt}
+                        fill
+                        sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                        className="object-cover"
+                      />
+                    </div>
                   )}
                   <h2 className="text-lg font-semibold mb-2" style={{ fontFamily: 'Syne, sans-serif', color: 'var(--text)' }}>
                     {guide.title}
@@ -62,7 +69,8 @@ export default async function GuidesPage() {
                   <span className="text-sm" style={{ color: 'var(--cyan)' }}>Read guide →</span>
                 </BlueprintCard>
               </Link>
-            ))}
+              )
+            })}
           </div>
         )}
       </div>
