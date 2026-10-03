@@ -1,91 +1,26 @@
 import Link from 'next/link'
-import { Scale, Building2, DraftingCompass, FileText, HardHat, Shield, Calculator } from 'lucide-react'
+import Image from 'next/image'
+import { Scale, Landmark, DraftingCompass, FileCheck, HardHat, ShieldCheck, Calculator } from 'lucide-react'
 import { VideoHero } from '@/components/ui/VideoHero'
 import { IslandTag } from '@/components/ui/IslandTag'
-import { BeforeAfter } from '@/components/ui/BeforeAfter'
-import { searchPhotos, searchVideos, getBestVideoUrl, getPhotoUrl, FALLBACKS } from '@/lib/pexels'
+import { HERO_IMAGE, GALLERY, CARD_IMAGES, PROPERTY_TAX_IMAGE } from '@/lib/site-images'
 
 const FEATURE_CARDS = [
-  { category: 'legal', title: 'Legal & Land', desc: 'Title searches, quiet title, conveyancing, and stamp duty.', href: '/guides?cat=legal', icon: Scale, fallback: FALLBACKS.legal },
-  { category: 'finance', title: 'Financing', desc: 'Mortgages, construction loans, BMC, and bank options.', href: '/guides?cat=finance', icon: Building2, fallback: FALLBACKS.finance },
-  { category: 'design', title: 'Design & Plans', desc: 'Building code basics, architect requirements, drawings.', href: '/guides?cat=design', icon: DraftingCompass, fallback: FALLBACKS.design },
-  { category: 'permits', title: 'Permits', desc: 'Planning permission, building permits, utility connections.', href: '/permits', icon: FileText, fallback: FALLBACKS.permits },
-  { category: 'contractors', title: 'Contractors', desc: 'Find verified masons, electricians, and general contractors.', href: '/contractors', icon: HardHat, fallback: FALLBACKS.contractors },
-  { category: 'insurance', title: 'Insurance', desc: 'Construction insurance requirements and coverage types.', href: '/guides?cat=insurance', icon: Shield, fallback: FALLBACKS.insurance },
+  { category: 'legal', title: 'Legal & Land', desc: 'Title searches, quiet title, conveyancing, and stamp duty.', href: '/guides?cat=legal', icon: Scale, image: CARD_IMAGES.legal },
+  { category: 'finance', title: 'Financing', desc: 'Mortgages, construction loans, BMC, and bank options.', href: '/guides?cat=finance', icon: Landmark, image: CARD_IMAGES.finance },
+  { category: 'design', title: 'Design & Plans', desc: 'Building code basics, architect requirements, drawings.', href: '/guides?cat=design', icon: DraftingCompass, image: CARD_IMAGES.design },
+  { category: 'permits', title: 'Permits', desc: 'Planning permission, building permits, utility connections.', href: '/permits', icon: FileCheck, image: CARD_IMAGES.permits },
+  { category: 'contractors', title: 'Contractors', desc: 'Find verified masons, electricians, and general contractors.', href: '/contractors', icon: HardHat, image: CARD_IMAGES.contractors },
+  { category: 'insurance', title: 'Insurance', desc: 'Construction insurance requirements and coverage types.', href: '/guides?cat=insurance', icon: ShieldCheck, image: CARD_IMAGES.insurance },
 ]
 
 const ISLAND_NAMES = ['Abaco', 'Exuma', 'Eleuthera', 'Andros', 'Long Island', 'Bimini']
 
-const GALLERY_QUERIES = [
-  'bahamas luxury home pool',
-  'caribbean villa ocean view',
-  'modern beach house architecture',
-  'tropical home exterior',
-  'luxury island property',
-  'caribbean modern home',
-  'bahamas waterfront villa',
-  'luxury resort tropical',
-  'modern island architecture',
-]
-
-const GALLERY_FALLBACKS = [
-  'https://images.pexels.com/photos/1396122/pexels-photo-1396122.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/1732414/pexels-photo-1732414.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/2121121/pexels-photo-2121121.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/323780/pexels-photo-323780.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/106399/pexels-photo-106399.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/1029599/pexels-photo-1029599.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/1475938/pexels-photo-1475938.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/2635038/pexels-photo-2635038.jpeg?auto=compress&cs=tinysrgb&w=600',
-  'https://images.pexels.com/photos/259588/pexels-photo-259588.jpeg?auto=compress&cs=tinysrgb&w=600',
-]
-
-export default async function HomePage() {
-  // Fetch hero video
-  let heroVideoUrl = ''
-  let heroFallback = FALLBACKS.hero
-  try {
-    const videos = await searchVideos('luxury home construction timelapse', 3)
-    if (videos[0]) heroVideoUrl = getBestVideoUrl(videos[0])
-    const heroPhotos = await searchPhotos('caribbean luxury villa architecture', 1)
-    if (heroPhotos[0]) heroFallback = getPhotoUrl(heroPhotos[0], 'large2x')
-  } catch {}
-
-  // Fetch feature card photos
-  const featurePhotos: Record<string, string> = {}
-  try {
-    const queries: [string, string][] = [
-      ['legal', 'legal documents professional office'],
-      ['finance', 'bank building architecture modern'],
-      ['design', 'architectural blueprints drawing table'],
-      ['permits', 'official government building documents'],
-      ['contractors', 'construction workers masonry craftsman'],
-      ['insurance', 'professional business handshake modern'],
-    ]
-    await Promise.all(queries.map(async ([key, q]) => {
-      const photos = await searchPhotos(q, 1)
-      featurePhotos[key] = photos[0] ? getPhotoUrl(photos[0], 'large') : FALLBACKS[key as keyof typeof FALLBACKS]
-    }))
-  } catch {}
-
-  // Fetch gallery images
-  const galleryImages: string[] = []
-  try {
-    const results = await Promise.all(GALLERY_QUERIES.slice(0, 9).map(q => searchPhotos(q, 1)))
-    results.forEach((photos, i) => {
-      galleryImages.push(photos[0] ? getPhotoUrl(photos[0], 'large') : GALLERY_FALLBACKS[i])
-    })
-  } catch {
-    galleryImages.push(...GALLERY_FALLBACKS)
-  }
-
-  // Ensure we have 9 gallery images
-  while (galleryImages.length < 9) galleryImages.push(GALLERY_FALLBACKS[galleryImages.length] || GALLERY_FALLBACKS[0])
-
+export default function HomePage() {
   return (
     <div>
       {/* Section 1 — Video Hero */}
-      <VideoHero videoSrc={heroVideoUrl} fallbackImage={heroFallback}>
+      <VideoHero fallbackImage={HERO_IMAGE.src} fallbackAlt={HERO_IMAGE.alt}>
         <div className="flex flex-col items-center justify-center min-h-screen text-center px-6 pt-16">
           <div
             className="mb-8 inline-block"
@@ -148,34 +83,6 @@ export default async function HomePage() {
         </div>
       </VideoHero>
 
-      {/* Section 2 — Before & After */}
-      <section className="py-28 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="section-label mb-6">Real Transformations</div>
-          <h2 className="mb-4">See what&apos;s possible</h2>
-          <p className="mb-16 text-xl max-w-2xl">
-            Renovation projects across Nassau and the Family Islands — from concept to completion.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Exterior: neglected → renovated tropical */}
-            <BeforeAfter
-              beforeSrc="https://images.pexels.com/photos/10320592/pexels-photo-10320592.jpeg?auto=compress&cs=tinysrgb&w=800"
-              afterSrc="https://images.pexels.com/photos/34569496/pexels-photo-34569496.jpeg?auto=compress&cs=tinysrgb&w=800"
-            />
-            {/* Kitchen: outdated cabinets → modern remodel */}
-            <BeforeAfter
-              beforeSrc="https://images.pexels.com/photos/5008398/pexels-photo-5008398.jpeg?auto=compress&cs=tinysrgb&w=800"
-              afterSrc="https://images.pexels.com/photos/5353881/pexels-photo-5353881.jpeg?auto=compress&cs=tinysrgb&w=800"
-            />
-            {/* Bathroom: old tiles → modern renovation */}
-            <BeforeAfter
-              beforeSrc="https://images.pexels.com/photos/18644893/pexels-photo-18644893.jpeg?auto=compress&cs=tinysrgb&w=800"
-              afterSrc="https://images.pexels.com/photos/35868666/pexels-photo-35868666.jpeg?auto=compress&cs=tinysrgb&w=800"
-            />
-          </div>
-        </div>
-      </section>
-
       {/* Section 3 — Feature Cards with Photo Backgrounds */}
       <section className="py-20 px-6">
         <div className="max-w-7xl mx-auto">
@@ -184,7 +91,6 @@ export default async function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
             {FEATURE_CARDS.map(card => {
               const Icon = card.icon
-              const bg = featurePhotos[card.category] || card.fallback
               return (
                 <Link key={card.category} href={card.href} className="card-hover block">
                   <div
@@ -192,16 +98,22 @@ export default async function HomePage() {
                     style={{ border: '1px solid var(--cyan-border)', height: 280 }}
                   >
                     {/* Photo background */}
-                    <div
-                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 hover:scale-105"
-                      style={{ backgroundImage: `url(${bg})` }}
+                    <Image
+                      src={card.image.src}
+                      alt={card.image.alt}
+                      fill
+                      sizes="(min-width: 1024px) 33vw, (min-width: 768px) 50vw, 100vw"
+                      className="object-cover transition-transform duration-700 hover:scale-105"
                     />
                     <div className="photo-card-overlay" />
 
                     {/* Content */}
                     <div className="absolute inset-0 z-10 p-7 flex flex-col justify-end">
-                      <div className="mb-4">
-                        <Icon size={28} style={{ color: 'var(--cyan)', strokeWidth: 1.5 }} />
+                      <div
+                        className="mb-4 inline-flex items-center justify-center w-12 h-12 rounded-md"
+                        style={{ background: 'rgba(6,13,26,0.75)', border: '1px solid rgba(0,212,245,0.55)', boxShadow: '0 0 18px rgba(0,212,245,0.18)' }}
+                      >
+                        <Icon size={24} strokeWidth={2.25} style={{ color: 'var(--cyan)' }} />
                       </div>
                       <div className="section-label mb-2" style={{ color: 'var(--cyan)', fontSize: '0.7rem' }}>
                         {card.category}
@@ -236,9 +148,12 @@ export default async function HomePage() {
             style={{ background: 'linear-gradient(135deg, #1a0f00 0%, #2d1a00 100%)', border: '1px solid rgba(245,166,35,0.35)' }}
           >
             {/* Background photo */}
-            <div
-              className="absolute inset-0 bg-cover bg-center opacity-20"
-              style={{ backgroundImage: `url(${FALLBACKS.propertyTax})` }}
+            <Image
+              src={PROPERTY_TAX_IMAGE.src}
+              alt={PROPERTY_TAX_IMAGE.alt}
+              fill
+              sizes="(min-width: 1280px) 1280px, 100vw"
+              className="object-cover opacity-25"
             />
             <div className="relative z-10 p-12 md:p-16 max-w-2xl">
               <div className="section-label mb-6" style={{ color: 'var(--amber)' }}>
@@ -349,31 +264,39 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* Section 7 — Photo Gallery */}
+      {/* Section 7 — Bahamian architecture gallery (verified locations, not Groundwork projects) */}
       <section className="py-16 px-6 pb-28">
         <div className="max-w-7xl mx-auto">
-          <div className="section-label mb-6">Bahamian Homes</div>
-          <h2 className="mb-14">Built in the Bahamas</h2>
-          <div className="columns-2 md:columns-3 gap-4 space-y-4">
-            {galleryImages.slice(0, 9).map((src, i) => (
-              <div
-                key={i}
+          <div className="section-label mb-6">Island Architecture</div>
+          <h2 className="mb-4">Bahamian Homes</h2>
+          <p className="mb-14 text-lg max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
+            Homes and historic buildings photographed across The Bahamas — hip roofs, shutters, verandahs
+            and island colour. Shown for local style and inspiration; these are not Groundwork projects.{' '}
+            <Link href="/credits" className="underline hover:text-white">Photo credits</Link>.
+          </p>
+          <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
+            {GALLERY.map(({ image, island }) => (
+              <figure
+                key={image.src}
                 className="relative overflow-hidden rounded-sm group"
                 style={{ breakInside: 'avoid', border: '1px solid rgba(0,212,245,0.1)' }}
               >
-                {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img
-                  src={src}
-                  alt={`Bahamian home ${i + 1}`}
-                  className="w-full object-cover transition-transform duration-700 group-hover:scale-110"
+                <Image
+                  src={image.src}
+                  alt={image.alt}
+                  width={image.width}
+                  height={image.height}
+                  sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <div
-                  className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 flex items-end p-4"
-                  style={{ background: 'linear-gradient(to top, rgba(6,13,26,0.85), transparent)' }}
+                <figcaption
+                  className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1.5 items-start"
+                  style={{ background: 'linear-gradient(to top, rgba(6,13,26,0.9), rgba(6,13,26,0))' }}
                 >
-                  <IslandTag island={i % 3 === 0 ? 'Exuma' : i % 3 === 1 ? 'New Providence' : 'Abaco'} />
-                </div>
-              </div>
+                  <IslandTag island={island} />
+                  <span className="text-sm font-medium" style={{ color: 'rgba(240,244,255,0.92)' }}>{image.place}</span>
+                </figcaption>
+              </figure>
             ))}
           </div>
         </div>
@@ -387,7 +310,7 @@ export default async function HomePage() {
             <div className="text-sm" style={{ color: 'var(--muted)' }}>Build right. From the ground up.</div>
           </div>
           <div className="flex gap-6 text-sm font-medium flex-wrap justify-center" style={{ color: 'var(--text-secondary)' }}>
-            {['/guides', '/permits', '/property-tax', '/duty-exemptions', '/financing', '/partners', '/contractors', '/advisor', '/services', '/pricing'].map(href => (
+            {['/guides', '/permits', '/property-tax', '/duty-exemptions', '/financing', '/partners', '/contractors', '/advisor', '/services', '/pricing', '/credits'].map(href => (
               <Link key={href} href={href} className="hover:text-white transition-colors capitalize">
                 {href.replace('/', '')}
               </Link>

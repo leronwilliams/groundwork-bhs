@@ -1,15 +1,17 @@
 'use client'
 
 import { ReactNode, useEffect, useRef } from 'react'
+import Image from 'next/image'
 
 interface VideoHeroProps {
   videoSrc?: string
   fallbackImage?: string
+  fallbackAlt?: string
   children: ReactNode
   className?: string
 }
 
-export function VideoHero({ videoSrc, fallbackImage, children, className = '' }: VideoHeroProps) {
+export function VideoHero({ videoSrc, fallbackImage, fallbackAlt = '', children, className = '' }: VideoHeroProps) {
   const videoRef = useRef<HTMLVideoElement>(null)
 
   useEffect(() => {
@@ -34,10 +36,7 @@ export function VideoHero({ videoSrc, fallbackImage, children, className = '' }:
           <source src={videoSrc} type="video/mp4" />
         </video>
       ) : fallbackImage ? (
-        <div
-          className="absolute inset-0 bg-cover bg-center"
-          style={{ backgroundImage: `url(${fallbackImage})` }}
-        />
+        <Image src={fallbackImage} alt={fallbackAlt} fill priority sizes="100vw" className="object-cover" />
       ) : (
         <div className="absolute inset-0" style={{ background: 'var(--navy)' }} />
       )}
