@@ -3,6 +3,7 @@ import { useState, useEffect, useCallback } from 'react'
 import { useParams } from 'next/navigation'
 import { useAuth } from '@clerk/nextjs'
 import Link from 'next/link'
+import { ContractorAvatar } from '@/components/ui/ContractorAvatar'
 import { CheckCircle, Loader2, Star, Phone, Mail, Globe, MessageCircle, AlertCircle, ArrowLeft } from 'lucide-react'
 
 interface Review { id: string; authorName: string; rating: number; comment: string | null; createdAt: string }
@@ -112,10 +113,7 @@ export default function ContractorProfilePage() {
         {/* Header */}
         <div className="p-6 rounded-sm mb-6" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
           <div className="flex items-start gap-4">
-            {contractor.imageUrl && (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={contractor.imageUrl} alt={contractor.name} className="w-20 h-20 rounded-sm object-cover flex-shrink-0" />
-            )}
+            <ContractorAvatar name={contractor.name} imageUrl={contractor.imageUrl} size={80} />
             <div className="flex-1 min-w-0">
               <h1 className="text-3xl font-bold mb-1" style={{ color: 'var(--text-primary)' }}>{contractor.name}</h1>
               <div className="flex items-center gap-2 flex-wrap mb-2">

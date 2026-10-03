@@ -2,6 +2,7 @@ import { prisma } from '@/lib/db'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
 import { IslandTag } from '@/components/ui/IslandTag'
 import { SectionBadge } from '@/components/ui/SectionBadge'
+import { ContractorAvatar } from '@/components/ui/ContractorAvatar'
 import { CheckCircle, Lock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 
@@ -48,10 +49,7 @@ export default async function ContractorsPage() {
                     </span>
                   </div>
                   <div className="flex items-start gap-4">
-                    {c.imageUrl && (
-                      // eslint-disable-next-line @next/next/no-img-element
-                      <img src={c.imageUrl} alt={c.name} className="w-16 h-16 rounded-sm object-cover flex-shrink-0" />
-                    )}
+                    <ContractorAvatar name={c.name} imageUrl={c.imageUrl} size={64} />
                     <div className="flex-1">
                       <h2 className="text-xl font-semibold mb-1" style={{ fontFamily: 'Syne, sans-serif' }}>{c.name}</h2>
                       <div className="flex gap-2 flex-wrap mb-2">
@@ -91,7 +89,9 @@ export default async function ContractorsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {regular.map(c => (
                 <BlueprintCard key={c.id}>
-                  <div>
+                  <div className="flex items-start gap-4">
+                  <ContractorAvatar name={c.name} imageUrl={c.imageUrl} size={48} />
+                  <div className="flex-1 min-w-0">
                     <h2 className="text-lg font-semibold mb-2" style={{ fontFamily: 'Syne, sans-serif' }}>{c.name}</h2>
                     <div className="flex gap-2 flex-wrap mb-3">
                       <SectionBadge label={c.trade} />
@@ -103,6 +103,7 @@ export default async function ContractorsPage() {
                       {c.email && <a href={`mailto:${c.email}`} style={{ color: 'var(--cyan)' }}>{c.email}</a>}
                     </div>
                     <Link href={`/contractors/${c.id}`} className="inline-block mt-3 text-sm font-semibold" style={{ color: 'var(--cyan)' }}>View profile &amp; reviews →</Link>
+                  </div>
                   </div>
                 </BlueprintCard>
               ))}
