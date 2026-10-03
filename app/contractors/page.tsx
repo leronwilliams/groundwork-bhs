@@ -27,7 +27,7 @@ export default async function ContractorsPage() {
           Find a Contractor
         </h1>
         <p className="mb-12 text-lg" style={{ color: 'var(--muted)' }}>
-          Masons, electricians, plumbers, roofers, and general contractors across Nassau and the Family Islands.
+          Masons, electricians, plumbers, roofers, and general contractors across The Bahamas.
         </p>
 
         {/* Featured */}
@@ -119,7 +119,7 @@ export default async function ContractorsPage() {
             <Lock size={40} style={{ color: 'var(--cyan)', margin: '0 auto 16px', opacity: 0.6 }} />
             <h2 className="text-2xl mb-3">Contractor Directory Coming Soon</h2>
             <p className="mb-6 max-w-md mx-auto" style={{ color: 'var(--text-secondary)' }}>
-              We are verifying contractors across Nassau and the Family Islands. 
+              We are verifying contractors across The Bahamas. 
               All listings go through an approval process before they appear here.
             </p>
             <Link
