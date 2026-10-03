@@ -274,20 +274,19 @@ export default function HomePage() {
             and island colour. Shown for local style and inspiration; these are not Groundwork projects.{' '}
             <Link href="/credits" className="underline hover:text-white">Photo credits</Link>.
           </p>
-          <div className="columns-1 sm:columns-2 md:columns-3 gap-4 space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {GALLERY.map(({ image, island }) => (
               <figure
                 key={image.src}
-                className="relative overflow-hidden rounded-sm group"
-                style={{ breakInside: 'avoid', border: '1px solid rgba(0,212,245,0.1)' }}
+                className="relative overflow-hidden rounded-sm group aspect-[4/3]"
+                style={{ border: '1px solid rgba(0,212,245,0.1)' }}
               >
                 <Image
                   src={image.src}
                   alt={image.alt}
-                  width={image.width}
-                  height={image.height}
-                  sizes="(min-width: 768px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="w-full h-auto object-cover transition-transform duration-700 group-hover:scale-105"
+                  fill
+                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
+                  className="object-cover transition-transform duration-700 group-hover:scale-105"
                 />
                 <figcaption
                   className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1.5 items-start"
