@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import { Anchor, Building2 } from 'lucide-react'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
 
 const PERMITS = [
@@ -74,9 +75,9 @@ export default function PermitsPage() {
           className="inline-flex gap-3 mb-12 p-3 rounded-sm text-sm"
           style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}
         >
-          <span style={{ color: 'var(--cyan)' }}>🏙 New Providence</span>
+          <span className="inline-flex items-center gap-1.5" style={{ color: 'var(--cyan)' }}><Building2 size={14} strokeWidth={2.25} aria-hidden /> New Providence</span>
           <span style={{ color: 'var(--muted)' }}>|</span>
-          <span style={{ color: 'var(--amber)' }}>⚓ Family Islands — see notes below each permit</span>
+          <span className="inline-flex items-center gap-1.5" style={{ color: 'var(--amber)' }}><Anchor size={14} strokeWidth={2.25} aria-hidden /> Family Islands — see notes below each permit</span>
         </div>
 
         {/* Permit cards */}
@@ -126,7 +127,7 @@ export default function PermitsPage() {
           <ul className="space-y-3">
             {FAMILY_ISLAND_NOTES.map(note => (
               <li key={note} className="flex gap-3 text-sm" style={{ color: 'var(--text)' }}>
-                <span style={{ color: 'var(--amber)' }}>⚓</span> {note}
+                <Anchor size={14} strokeWidth={2.25} className="flex-shrink-0 mt-0.5" style={{ color: 'var(--amber)' }} aria-hidden /> {note}
               </li>
             ))}
           </ul>

@@ -1,6 +1,7 @@
 'use client'
 
 import Link from 'next/link'
+import { LogoMark } from '@/components/ui/LogoMark'
 import { useEffect, useState } from 'react'
 import { SignInButton, SignOutButton, useUser } from '@clerk/nextjs'
 import { Menu, X } from 'lucide-react'
@@ -40,12 +41,7 @@ export function Navbar() {
       <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
         {/* Wordmark */}
         <Link href="/" className="flex items-center gap-3 group">
-          <div
-            className="w-8 h-8 rounded-sm flex items-center justify-center text-xs font-black"
-            style={{ background: 'var(--cyan)', color: 'var(--navy)', letterSpacing: '-0.02em' }}
-          >
-            GW
-          </div>
+          <LogoMark size={34} />
           <span className="text-xl font-black tracking-tight" style={{ fontFamily: 'Syne, sans-serif', color: 'var(--text-bright)', letterSpacing: '-0.03em' }}>
             Groundwork
           </span>
