@@ -7,7 +7,7 @@ import { Footer } from '@/components/ui/Footer'
 import { AdvisorWidget } from '@/components/advisor/AdvisorWidget'
 import { AdminServicesOverlay } from '@/components/admin/AdminServicesOverlay'
 import { ThirdPartyAnalytics } from '@/components/analytics/ThirdPartyAnalytics'
-import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION } from '@/lib/seo'
+import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, OG_IMAGE } from '@/lib/seo'
 import './globals.css'
 
 const DEFAULT_TITLE = 'Groundwork BHS — Build Right in The Bahamas'
@@ -18,9 +18,8 @@ export const metadata: Metadata = {
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
   keywords: ['bahamas construction', 'building permits bahamas', 'construction cost nassau', 'bill of quantities bahamas', 'property tax bahamas', 'contractors nassau', 'duty exemption building materials'],
-  alternates: { canonical: '/' },
-  openGraph: { type: 'website', siteName: SITE_NAME, title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, url: '/', locale: 'en_BS' },
-  twitter: { card: 'summary_large_image', title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION },
+  openGraph: { type: 'website', siteName: SITE_NAME, title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, url: '/', locale: 'en_BS', images: [OG_IMAGE] },
+  twitter: { card: 'summary_large_image', title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, images: [OG_IMAGE.url] },
 }
 
 export const viewport: Viewport = { themeColor: '#060d1a' }

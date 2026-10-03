@@ -1,4 +1,7 @@
 import Link from 'next/link'
+import type { Metadata } from 'next'
+
+export const metadata: Metadata = { alternates: { canonical: '/' } }
 import Image from 'next/image'
 import { Scale, Landmark, DraftingCompass, FileCheck, HardHat, ShieldCheck, Calculator } from 'lucide-react'
 import { VideoHero } from '@/components/ui/VideoHero'
