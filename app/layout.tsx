@@ -8,6 +8,7 @@ import { AdvisorWidget } from '@/components/advisor/AdvisorWidget'
 import { AdminServicesOverlay } from '@/components/admin/AdminServicesOverlay'
 import { ThirdPartyAnalytics } from '@/components/analytics/ThirdPartyAnalytics'
 import { SITE_URL, SITE_NAME, DEFAULT_DESCRIPTION, OG_IMAGE } from '@/lib/seo'
+import { clerkAppearance } from '@/lib/clerk-appearance'
 import './globals.css'
 
 const DEFAULT_TITLE = 'Groundwork BHS — Build Right in The Bahamas'
@@ -26,7 +27,7 @@ export const viewport: Viewport = { themeColor: '#060d1a' }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up">
+    <ClerkProvider signInUrl="/sign-in" signUpUrl="/sign-up" appearance={clerkAppearance}>
       <html lang="en">
         <body>
           <Navbar />

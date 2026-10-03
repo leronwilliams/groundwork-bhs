@@ -97,7 +97,10 @@ export function AdvisorWidget() {
   }
 
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: 'smooth' })
+    // scroll the chat pane only, never the page behind the widget
+    if (messages.length === 0) return
+    const pane = bottomRef.current?.parentElement
+    if (pane) pane.scrollTo({ top: pane.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
   const recentMessages = messages.slice(-4)

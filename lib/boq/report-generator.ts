@@ -117,7 +117,7 @@ export async function generateBOQReport(
   // Disclaimer (prominent): budget estimate, not a QS quote
   doc.setDrawColor(...AMBER)
   doc.setLineWidth(0.4)
-  doc.roundedRect(20, 243, 170, 40, 2, 2, 'S')
+  doc.roundedRect(20, 243, 170, 30, 2, 2, 'S')
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(9)
   doc.setTextColor(...AMBER)
@@ -178,7 +178,7 @@ export async function generateBOQReport(
 
   const costRows = [
     ['Materials Cost', fmtCurrency(result.summary.materialsCostLow), fmtCurrency(result.summary.materialsCostHigh)],
-    ['Labour Estimate', fmtCurrency(result.summary.labourEstimateLow), fmtCurrency(result.summary.labourEstimateHigh)],
+    ['Labour, OH&P (est.)', fmtCurrency(result.summary.labourEstimateLow), fmtCurrency(result.summary.labourEstimateHigh)],
     ['Permit & Professional Fees', fmtCurrency(result.summary.permitFees), fmtCurrency(result.summary.permitFees)],
     ['Contingency (10%)', fmtCurrency(result.summary.contingency), fmtCurrency(Math.round(result.summary.grandTotalHigh * 0.1))],
   ]

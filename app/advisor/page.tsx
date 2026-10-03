@@ -108,7 +108,13 @@ export default function AdvisorPage() {
     }
   }
 
-  useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
+  // Scroll only the chat pane (not the whole page), and only once there are messages,
+  // so the page title isn't scrolled under the fixed header on load (esp. mobile).
+  useEffect(() => {
+    if (messages.length === 0) return
+    const pane = bottomRef.current?.parentElement
+    if (pane) pane.scrollTo({ top: pane.scrollHeight, behavior: 'smooth' })
+  }, [messages])
 
   return (
     <div className="min-h-screen pt-24 md:pt-28" style={{ background: 'var(--navy)' }}>
