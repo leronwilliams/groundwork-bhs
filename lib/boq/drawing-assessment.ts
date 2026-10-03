@@ -2,7 +2,8 @@
  * Groundwork BHS — Drawing Quality Assessment
  * Phase 1.1: Assess uploaded PDF quality before running takeoff
  * 
- * Uses Claude Opus with native PDF support to analyze the drawing.
+ * Uses Claude Haiku (native PDF support) to analyze the drawing; a cheap
+ * classification task that does not need a frontier model.
  * Quality score determines whether we proceed to takeoff or request more info.
  */
 
@@ -23,6 +24,8 @@ export interface DrawingAssessment {
   warnings: string[]
   recommendation: 'proceed' | 'request_more_info' | 'manual_input_required'
   rawAnalysis: string
+  /** True when the AI call failed (provider error), as opposed to a poor drawing. */
+  aiFailed?: boolean
 }
 
 const ASSESSMENT_PROMPT = `You are a licensed quantity surveyor reviewing architectural drawings for a Bahamian construction project.
@@ -62,7 +65,7 @@ If no PDF/image provided: return qualityScore 0, recommendation "manual_input_re
 Return ONLY the JSON object, no prose.`
 
 /**
- * Assess drawing quality using Claude Opus with native PDF support.
+ * Assess drawing quality using Claude Haiku with native PDF support.
  * If no file URL provided, returns manual_input_required.
  */
 export async function assessDrawing(fileUrl: string | null): Promise<DrawingAssessment> {
@@ -83,13 +86,23 @@ export async function assessDrawing(fileUrl: string | null): Promise<DrawingAsse
     }
   }
 
-  try {
-    const pdfBase64 = await readPdfAsBase64(fileUrl)
-    if (!pdfBase64) throw new Error('Could not read uploaded PDF')
+  let pdfBase64: string | null = null
+  try { pdfBase64 = await readPdfAsBase64(fileUrl) } catch {}
+  if (!pdfBase64) {
+    return {
+      qualityScore: 0, hasScaleBar: false, hasDimensions: false, hasFloorPlan: false,
+      hasElevations: false, hasSections: false, detectedScale: null, detectedArea: null,
+      warnings: ['The uploaded PDF could not be read. BOQ will be calculated from your confirmed dimensions only.'],
+      recommendation: 'manual_input_required',
+      rawAnalysis: 'PDF unreadable.',
+    }
+  }
 
-    const response = await anthropic.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 1024,
+  let response: Anthropic.Message
+  try {
+    response = await anthropic.messages.create({
+      model: 'claude-haiku-4-5',
+      max_tokens: 800,
       messages: [{
         role: 'user',
         content: [
@@ -108,7 +121,19 @@ export async function assessDrawing(fileUrl: string | null): Promise<DrawingAsse
         ],
       }],
     })
+  } catch (err) {
+    console.error('Drawing assessment provider error:', (err as Error)?.message)
+    return {
+      qualityScore: 0, hasScaleBar: false, hasDimensions: false, hasFloorPlan: false,
+      hasElevations: false, hasSections: false, detectedScale: null, detectedArea: null,
+      warnings: ['AI drawing analysis is temporarily unavailable.'],
+      recommendation: 'request_more_info',
+      rawAnalysis: 'AI unavailable.',
+      aiFailed: true,
+    }
+  }
 
+  try {
     const text = response.content[0].type === 'text' ? response.content[0].text : '{}'
     
     // Extract JSON from response
@@ -132,7 +157,7 @@ export async function assessDrawing(fileUrl: string | null): Promise<DrawingAsse
       detectedArea: null,
       warnings: ['Drawing could not be fully analyzed. Proceeding with confirmed dimensions only.'],
       recommendation: 'request_more_info',
-      rawAnalysis: `Assessment error: ${err instanceof Error ? err.message : 'unknown'}`,
+      rawAnalysis: 'Assessment response could not be parsed.',
     }
   }
 }

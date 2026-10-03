@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { Upload, CheckCircle, Loader2, AlertCircle, Download, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
 
@@ -20,6 +20,7 @@ interface BOQResult {
   trades: { trade: string; itemCount: number; subtotalLow: number; subtotalHigh: number }[]
   lineItems: LineItem[]
   reportUrl: string | null
+  aiStatus?: { claude: boolean; gpt: boolean; dualAI: boolean; label: string }
   dutySavings?: { totalDuty: number; exemptibleDuty: number; potentialSaving: number; isFirstTimeHomeowner: boolean; message: string }
 }
 
@@ -44,6 +45,27 @@ export default function BOQWizardPage() {
   const [shoppingList, setShoppingList] = useState<{ supplier: string; items: LineItem[]; subtotal: number }[] | null>(null)
   const [showWhySection, setShowWhySection] = useState(false)
   const [isFirstTimeHomeowner, setIsFirstTimeHomeowner] = useState(false)
+  const [purchase, setPurchase] = useState<{ sessionId: string | null; orderId: string | null }>({ sessionId: null, orderId: null })
+  const [payment, setPayment] = useState<'checking' | 'paid' | 'unpaid'>('checking')
+  const [payError, setPayError] = useState('')
+
+  // Server-side payment check (BOQ purchases only)
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    const sessionId = sp.get('session_id')
+    const orderId = sp.get('orderId')
+    setPurchase({ sessionId, orderId })
+    const qs = new URLSearchParams({ scope: 'boq' })
+    if (sessionId) qs.set('session_id', sessionId)
+    if (orderId) qs.set('orderId', orderId)
+    fetch(`/api/verify-payment?${qs}`)
+      .then(async r => {
+        const d = await r.json().catch(() => ({}))
+        if (r.ok && d.paid) setPayment('paid')
+        else { setPayment('unpaid'); setPayError(d.error || 'A Bill of Quantities purchase is required.') }
+      })
+      .catch(() => { setPayment('unpaid'); setPayError('Could not verify your purchase. Please refresh the page.') })
+  }, [])
 
   async function handleFileSelect(f: File) {
     if (f.type !== 'application/pdf') { setError('Only PDF files accepted.'); return }
@@ -64,8 +86,8 @@ export default function BOQWizardPage() {
     setProcessing(true); setError(''); setStep('processing')
     const stages = [
       'Assessing drawing quality...',
-      'Running Claude Opus takeoff...',
-      'Running GPT-4o cross-validation...',
+      'Running Claude takeoff...',
+      'Running GPT-4o cross-check...',
       'Applying formula engine...',
       'Calculating confidence scores...',
       'Generating PDF report...',
@@ -79,6 +101,8 @@ export default function BOQWizardPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
+          sessionId: purchase.sessionId,
+          orderId: purchase.orderId,
           fileUrl,
           isFirstTimeHomeowner,
           dimensions: {
@@ -140,14 +164,29 @@ export default function BOQWizardPage() {
   return (
     <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: 'var(--navy)' }}>
       <div className="max-w-3xl mx-auto">
-        <div className="section-label mb-4">4-Layer BOQ Engine</div>
+        <div className="section-label mb-4">BOQ Engine</div>
         <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Bill of Quantities Generator</h1>
         <p className="mb-10" style={{ color: 'var(--text-secondary)' }}>
-          Dual AI validation — Claude Opus + GPT-4o — cross-checked against Bahamian construction formulas.
+          AI takeoff by Claude, cross-checked by GPT-4o and Bahamian construction formulas. Results are a starting point; verify with a qualified QS before tendering.
         </p>
 
+        {payment !== 'paid' && (
+          <div className="mb-8 p-6 rounded-sm text-center" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+            {payment === 'checking' ? (
+              <p style={{ color: 'var(--text-secondary)' }}>Checking your purchase…</p>
+            ) : (
+              <>
+                <AlertCircle size={36} style={{ color: 'var(--amber)', margin: '0 auto 10px' }} />
+                <p className="font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Purchase required</p>
+                <p className="text-sm mb-5" style={{ color: 'var(--text-secondary)' }}>{payError}</p>
+                <Link href="/services" className="inline-block px-6 py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Buy a Bill of Quantities</Link>
+              </>
+            )}
+          </div>
+        )}
+
         {/* Step: Upload */}
-        {step === 'upload' && (
+        {payment === 'paid' && step === 'upload' && (
           <div className="space-y-8">
             <div
               onDragOver={e => { e.preventDefault() }}
@@ -187,7 +226,7 @@ export default function BOQWizardPage() {
         )}
 
         {/* Step: Dimensions */}
-        {step === 'dimensions' && (
+        {payment === 'paid' && step === 'dimensions' && (
           <div className="space-y-8">
             <div className="grid grid-cols-2 gap-5">
               <div>
@@ -299,10 +338,10 @@ export default function BOQWizardPage() {
         {step === 'processing' && (
           <div className="text-center py-20">
             <Loader2 size={56} className="animate-spin mx-auto mb-6" style={{ color: 'var(--cyan)' }} />
-            <h2 className="text-xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Running 4-Layer BOQ Engine</h2>
+            <h2 className="text-xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Running BOQ Engine</h2>
             <p className="text-sm mb-8" style={{ color: 'var(--cyan)' }}>{processingStage}</p>
             <div className="space-y-2 max-w-sm mx-auto text-left">
-              {['Claude Opus Vision takeoff', 'GPT-4o cross-validation', 'Formula engine check', 'Confidence scoring', 'Island premium applied', 'PDF generation'].map((stage, i) => (
+              {['Drawing check', 'Claude takeoff', 'GPT-4o cross-check', 'Formula engine check', 'Confidence scoring', 'Island premium applied', 'PDF generation'].map((stage, i) => (
                 <div key={i} className="flex items-center gap-2 text-sm" style={{ color: 'var(--muted)' }}>
                   <div className="w-4 h-4 rounded-full" style={{ background: 'var(--navy-card)', border: '1px solid var(--cyan-border)' }} />
                   {stage}
@@ -323,11 +362,16 @@ export default function BOQWizardPage() {
                 <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{result.assessment.recommendation.replace(/_/g, ' ')}</p>
               </div>
               <div className="p-5 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
-                <div className="section-label mb-2">Overall Accuracy</div>
+                <div className="section-label mb-2">Confidence Score</div>
                 <p className="text-3xl font-black" style={{ color: result.confidence.overallScore >= 85 ? '#059669' : result.confidence.overallScore >= 70 ? 'var(--amber)' : '#ef4444' }}>{result.confidence.overallScore}%</p>
                 <p className="text-xs mt-1" style={{ color: 'var(--muted)' }}>{result.confidence.highPct}% high · {result.confidence.mediumPct}% med · {result.confidence.lowPct}% low</p>
               </div>
             </div>
+            {result.aiStatus && (
+              <p className="text-xs" style={{ color: result.aiStatus.dualAI ? 'var(--muted)' : 'var(--amber)' }}>
+                {result.aiStatus.label}. Confidence reflects agreement between methods, not guaranteed accuracy.
+              </p>
+            )}
 
             {/* Grand total */}
             <div className="p-6 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>

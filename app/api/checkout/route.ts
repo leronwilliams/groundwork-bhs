@@ -36,9 +36,10 @@ export async function POST(req: NextRequest) {
       success_url: `${origin}/checkout-success?session_id={CHECKOUT_SESSION_ID}&type=${priceKey}`,
       cancel_url: `${origin}/${isSubscription ? 'pricing' : 'services'}`,
       metadata: {
+        // client-supplied fields first so they can never override priceKey/clerkUserId
+        ...(metadata && typeof metadata === 'object' ? metadata : {}),
         clerkUserId: userId || '',
         priceKey,
-        ...metadata,
       },
       ...(isSubscription ? {
         subscription_data: {

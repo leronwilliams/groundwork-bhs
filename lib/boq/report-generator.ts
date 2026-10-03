@@ -79,16 +79,19 @@ export async function generateBOQReport(
   doc.setFont('helvetica', 'bold')
   doc.setFontSize(11)
   doc.setTextColor(...WHITE)
-  doc.text('Overall Accuracy: ' + overallScore + '%', 24, 157)
+  doc.text('Confidence score: ' + overallScore + '%', 24, 157)
 
   // Accuracy engine note
   doc.setFontSize(8.5)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...GREY as [number, number, number])
   const engineNote = [
-    'This BOQ was generated using Groundwork\'s 4-Layer Accuracy Engine.',
-    'Dual AI validation: Claude Opus + GPT-4o Vision.',
-    'Formula-verified against Bahamian construction standards.',
+    'This BOQ was generated using Groundwork\'s BOQ engine.',
+    result.aiStatus?.dualAI
+      ? 'Dual AI: Claude takeoff cross-checked by GPT-4o.'
+      : 'Claude AI takeoff (GPT-4o cross-check unavailable for this report).',
+    'Cross-checked against Bahamian construction formulas. Confidence reflects',
+    'agreement between methods, not guaranteed accuracy. Verify with a QS.',
   ]
   doc.text(engineNote, 20, 175)
 

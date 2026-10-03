@@ -1,5 +1,5 @@
 'use client'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import { Upload, CheckCircle, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -30,6 +30,25 @@ export default function OrderDeliveryPage() {
   const [dragOver, setDragOver] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [submitting, setSubmitting] = useState(false)
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [payment, setPayment] = useState<'checking' | 'paid' | 'unpaid'>('checking')
+  const [payError, setPayError] = useState('')
+  const [submitError, setSubmitError] = useState('')
+
+  useEffect(() => {
+    if (!type || type === 'lead' || !SERVICE_META[type]) return
+    const sid = new URLSearchParams(window.location.search).get('session_id')
+    setSessionId(sid)
+    const qs = new URLSearchParams({ scope: type })
+    if (sid) qs.set('session_id', sid)
+    fetch(`/api/verify-payment?${qs}`)
+      .then(async r => {
+        const d = await r.json().catch(() => ({}))
+        if (r.ok && d.paid) setPayment('paid')
+        else { setPayment('unpaid'); setPayError(d.error || 'Payment required.') }
+      })
+      .catch(() => { setPayment('unpaid'); setPayError('Could not verify your payment. Please refresh the page.') })
+  }, [type])
   const [form, setForm] = useState({
     island: '', projectType: '', area: '', floors: '1', finishLevel: 'Standard',
     trades: [] as string[], notes: '', contractorName: '', projectAddress: '',
@@ -65,6 +84,7 @@ export default function OrderDeliveryPage() {
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     setSubmitting(true)
+    setSubmitError('')
     try {
       // Upload file if present
       let fileUrl: string | null = null
@@ -73,18 +93,23 @@ export default function OrderDeliveryPage() {
         formData.append('file', file)
         const res = await fetch('/api/upload', { method: 'POST', body: formData })
         const data = await res.json()
+        if (!res.ok || !data.url) throw new Error(data.error || 'Upload failed. Please try again.')
         fileUrl = data.url
       }
 
       // Submit order details
-      await fetch('/api/order-submit', {
+      const res = await fetch('/api/order-submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type, fileUrl, brief: form }),
+        body: JSON.stringify({ type, fileUrl, brief: form, sessionId }),
       })
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Submission failed. Please try again or contact support.')
+      }
       setSubmitted(true)
-    } catch {
-      alert('Submission failed. Please try again or contact support.')
+    } catch (err) {
+      setSubmitError(err instanceof Error ? err.message : 'Submission failed. Please try again or contact support.')
     } finally {
       setSubmitting(false)
     }
@@ -107,6 +132,27 @@ export default function OrderDeliveryPage() {
           <Link href="/" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>
             Back to Home
           </Link>
+        </div>
+      </div>
+    )
+  }
+
+  if (payment !== 'paid') {
+    return (
+      <div className="min-h-screen flex items-center justify-center px-6" style={{ background: 'var(--navy)' }}>
+        <div className="max-w-md w-full text-center p-12 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+          {payment === 'checking' ? (
+            <p style={{ color: 'var(--text-secondary)' }}>Checking your purchase…</p>
+          ) : (
+            <>
+              <AlertCircle size={48} style={{ color: 'var(--amber)', margin: '0 auto 16px' }} />
+              <h1 className="text-2xl font-bold mb-3" style={{ color: 'var(--text-primary)' }}>Payment required</h1>
+              <p className="mb-8 text-sm" style={{ color: 'var(--text-secondary)' }}>{payError}</p>
+              <Link href="/services" className="block py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>
+                View Services &amp; Pricing
+              </Link>
+            </>
+          )}
         </div>
       </div>
     )
@@ -277,6 +323,10 @@ export default function OrderDeliveryPage() {
             <label className="block text-xs mb-1.5" style={{ color: 'var(--muted)' }}>Additional Notes (optional)</label>
             <textarea rows={3} placeholder="Any specific requirements, questions, or context..." value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} className="w-full p-3 rounded-sm text-sm resize-none" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)', color: 'var(--text-primary)' }} />
           </div>
+
+          {submitError && (
+            <p className="text-sm text-center" style={{ color: '#ef4444' }}>{submitError}</p>
+          )}
 
           <button
             type="submit"

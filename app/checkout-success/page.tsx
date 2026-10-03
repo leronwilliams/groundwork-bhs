@@ -21,6 +21,10 @@ const SERVICE_LABELS: Record<string, string> = {
 function SuccessContent() {
   const params = useSearchParams()
   const type = params.get('type') || ''
+  const sessionId = params.get('session_id') || ''
+  const sid = sessionId ? `session_id=${encodeURIComponent(sessionId)}` : ''
+  const isEstimate = type === 'estimate_single' || type === 'estimate_full'
+  const isBoq = type === 'boq' || type === 'boq_hardware' || type === 'boq_quotes'
   const label = SERVICE_LABELS[type] || 'Your Order'
   const isSubscription = type === 'pro' || type === 'builder'
 
@@ -45,9 +49,27 @@ function SuccessContent() {
             : 'Your order has been received. We will deliver your document within 1–2 business days.'}
         </p>
         <div className="flex flex-col gap-3">
-          {!isSubscription && type && type !== 'lead' && (
+          {isEstimate && (
             <Link
-              href={`/order/${type}`}
+              href={`/estimate/new?${sid}&type=${type}`}
+              className="block py-3 rounded-sm font-bold text-sm"
+              style={{ background: 'var(--cyan)', color: 'var(--navy)' }}
+            >
+              Generate Your Estimate Now
+            </Link>
+          )}
+          {isBoq && (
+            <Link
+              href={`/boq-wizard?${sid}`}
+              className="block py-3 rounded-sm font-bold text-sm"
+              style={{ background: 'var(--cyan)', color: 'var(--navy)' }}
+            >
+              Open the BOQ Generator
+            </Link>
+          )}
+          {!isSubscription && type && type !== 'lead' && !isEstimate && !isBoq && (
+            <Link
+              href={`/order/${type}${sid ? `?${sid}` : ''}`}
               className="block py-3 rounded-sm font-bold text-sm"
               style={{ background: 'var(--cyan)', color: 'var(--navy)' }}
             >

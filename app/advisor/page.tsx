@@ -72,6 +72,14 @@ export default function AdvisorPage() {
         return
       }
 
+      // Rate limited, AI unavailable, or other server error: show the server's friendly message
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        setMessages(prev => [...prev, { role: 'assistant', content: data.error || 'Something went wrong. Please try again.' }])
+        setLoading(false)
+        return
+      }
+
       if (!res.body) throw new Error('No response body')
       incrementAnonCount()
 

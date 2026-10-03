@@ -1,10 +1,11 @@
 /**
  * POST /api/boq-v2
  * 
- * 4-Layer BOQ Accuracy Engine:
- * 1. Drawing Assessment (Claude Opus Vision)
+ * BOQ engine (paid; payment verified server-side):
+ * 0. Payment verification + per-IP rate limit
+ * 1. Drawing Assessment (Claude Haiku, PDF)
  * 2. Dimension Confirmation (from request body)
- * 3. Dual AI Takeoff (Claude + GPT-4o simultaneously)
+ * 3. AI Takeoff (Claude Sonnet, required) + GPT-4o cross-check (optional)
  * 4. Formula Engine Cross-Validation
  * 5. Confidence Scoring + Island Premium
  * 6. PDF Report Generation
@@ -18,11 +19,16 @@ import { calculateTotalDutySavings } from '@/lib/boq/duty-rates'
 import { generateBOQReport } from '@/lib/boq/report-generator'
 import { put } from '@vercel/blob'
 import { prisma } from '@/lib/db'
+import { rateLimit } from '@/lib/rate-limit'
+import { verifyPaidAccess, recordAiRun, BOQ_TYPES } from '@/lib/payment'
+import { AIUnavailableError, aiUnavailableResponse } from '@/lib/ai-errors'
 
 export const runtime = 'nodejs'
 export const maxDuration = 300  // 5 minutes for dual AI + PDF
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, 'boq-v2', 6)
+  if (limited) return limited
   try {
     let userId: string | null = null
     try {
@@ -30,15 +36,32 @@ export async function POST(req: NextRequest) {
       userId = (await auth()).userId
     } catch {}
 
-    const { orderId, fileUrl, dimensions, projectName, isFirstTimeHomeowner } = await req.json()
+    const body = await req.json().catch(() => null)
+    if (!body) return NextResponse.json({ error: 'Invalid request body' }, { status: 400 })
+    const { orderId: clientOrderId, sessionId, fileUrl, dimensions, projectName, isFirstTimeHomeowner } = body
 
     if (!dimensions) {
       return NextResponse.json({ error: 'dimensions required' }, { status: 400 })
     }
 
+    // ── Step 0: Payment verification ──────────────────────────────────────
+    const access = await verifyPaidAccess({
+      sessionId: sessionId || null,
+      orderId: clientOrderId || null,
+      clerkUserId: userId,
+      allowedTypes: BOQ_TYPES,
+    })
+    if (!access.ok) {
+      return NextResponse.json({ error: access.error, code: access.code }, { status: access.status })
+    }
+    const orderId = access.orderId // only ever the verified order
+
     // ── Step 1: Drawing Assessment ────────────────────────────────────────
     console.log('[BOQ-V2] Starting drawing assessment...')
     const assessment = await assessDrawing(fileUrl || null)
+    if (assessment.aiFailed) {
+      return aiUnavailableResponse('boq-v2', new Error('drawing assessment failed'))
+    }
 
     // If drawing is unusable and no dimensions provided — stop early
     if (assessment.recommendation === 'manual_input_required' && !dimensions.totalFloorArea) {
@@ -50,8 +73,15 @@ export async function POST(req: NextRequest) {
     }
 
     // ── Step 2: Dual AI Takeoff + Formula Engine ──────────────────────────
-    console.log('[BOQ-V2] Running dual takeoff (Claude + GPT-4o)...')
-    const takeoffResult = await runDualTakeoff(fileUrl || null, dimensions, assessment)
+    console.log('[BOQ-V2] Running takeoff (Claude + optional GPT-4o)...')
+    let takeoffResult
+    try {
+      takeoffResult = await runDualTakeoff(fileUrl || null, dimensions, assessment)
+    } catch (err) {
+      if (err instanceof AIUnavailableError) return aiUnavailableResponse('boq-v2', err.cause || err)
+      throw err
+    }
+    await recordAiRun(access)
 
     // ── Step 3: Generate PDF Report ───────────────────────────────────────
     console.log('[BOQ-V2] Generating PDF report...')
@@ -61,7 +91,7 @@ export async function POST(req: NextRequest) {
     let reportUrl = null
     try {
       const blob = await put(
-        `boq-reports/${orderId || 'test'}-${Date.now()}.pdf`,
+        `boq-reports/${orderId || 'session'}-${Date.now()}.pdf`,
         Buffer.from(pdfBytes),
         { access: 'private', token: process.env.BLOB_READ_WRITE_TOKEN }
       )
@@ -95,7 +125,7 @@ export async function POST(req: NextRequest) {
           },
           create: {
             orderId,
-            userId: dbUser?.id || 'guest',
+            userId: dbUser?.id || access.orderUserId || 'guest',
             fileUrl: fileUrl || null,
             dimensions: JSON.parse(JSON.stringify(dimensions)),
             assessment: JSON.parse(JSON.stringify(assessment)),
@@ -135,9 +165,11 @@ export async function POST(req: NextRequest) {
       })),
       lineItems: takeoffResult.allItems,
       reportUrl,
+      aiStatus: takeoffResult.aiStatus,
       modelUsed: {
-        takeoff: 'claude-opus-4-6',
-        validation: 'gpt-4o',
+        assessment: fileUrl ? 'claude-haiku-4-5' : null,
+        takeoff: 'claude-sonnet-4-6',
+        validation: takeoffResult.aiStatus.gpt ? 'gpt-4o' : null,
         formula: 'groundwork-bahamas-v1',
       },
       dutySavings: {
@@ -150,6 +182,6 @@ export async function POST(req: NextRequest) {
     })
   } catch (error) {
     console.error('[BOQ-V2] Error:', error)
-    return NextResponse.json({ error: 'BOQ engine failed', detail: String(error) }, { status: 500 })
+    return NextResponse.json({ error: 'The BOQ engine hit an unexpected error. Your purchase is still valid; please try again.' }, { status: 500 })
   }
 }

@@ -1,8 +1,11 @@
 /**
- * Groundwork BHS — Dual AI Takeoff Engine
- * Phase 1.5: Claude Opus + GPT-4o cross-validation
- * 
- * Claude Opus: native PDF analysis + QS expertise
+ * Groundwork BHS — AI Takeoff Engine
+ * Claude Sonnet takeoff + GPT-4o cross-validation + formula engine
+ *
+ * Claude Sonnet: native PDF analysis + QS expertise (required: if it fails,
+ *   the takeoff fails with AIUnavailableError; no silent formula substitution)
+ * GPT-4o: optional cross-check; if it fails the result is labelled as
+ *   single-AI, never "dual AI"
  * GPT-4o: independent dimension-based validation (formula cross-check with AI reasoning)
  * Formula engine: Bahamian construction standards as ground truth baseline
  * 
@@ -19,6 +22,7 @@ import { runFormulaEngine, applyIslandPremium, FINISH_MULTIPLIERS } from './form
 import type { ProjectDimensions } from './formulas'
 import type { DrawingAssessment } from './drawing-assessment'
 import { getPrices } from './prices'
+import { AIUnavailableError } from '@/lib/ai-errors'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
 const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY })
@@ -58,6 +62,8 @@ export interface DualTakeoffResult {
     grandTotalHigh: number
     islandPremium: string
   }
+  /** Which AI layers actually succeeded for this result. */
+  aiStatus: { claude: boolean; gpt: boolean; dualAI: boolean; label: string }
   confidence: {
     highPct: number
     mediumPct: number
@@ -138,81 +144,6 @@ Where you differ by >10%: use your calculated quantity and explain in notes.
 Where you think an item was missed: add it.
 
 Output ONLY the JSON array.`
-
-/**
- * Run Claude Opus takeoff with native PDF support.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function runClaudeTakeoff(
-  pdfBase64: string | null,
-  dims: ProjectDimensions,
-  assessment: DrawingAssessment
-): Promise<Record<string, number>> {
-  const prompt = CLAUDE_TAKEOFF_PROMPT(dims, assessment)
-
-  const content: Anthropic.MessageParam['content'] = []
-
-  if (pdfBase64 && assessment.qualityScore >= 3) {
-    content.push({
-      type: 'document',
-      source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 },
-    } as unknown as Anthropic.TextBlockParam)
-  }
-
-  content.push({ type: 'text', text: prompt })
-
-  const response = await anthropic.messages.create({
-    model: 'claude-opus-4-6',
-    max_tokens: 4096,
-    messages: [{ role: 'user', content }],
-  })
-
-  const text = response.content[0].type === 'text' ? response.content[0].text : '[]'
-  const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) return {}
-
-  const sections = JSON.parse(jsonMatch[0]) as { trade: string; items: { itemCode: string; quantity: number }[] }[]
-  const quantities: Record<string, number> = {}
-  sections.forEach(section => {
-    section.items.forEach(item => { quantities[item.itemCode] = item.quantity })
-  })
-  return quantities
-}
-
-/**
- * Run GPT-4o validation — independent cross-check.
- */
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-async function runGPTValidation(
-  dims: ProjectDimensions,
-  assessment: DrawingAssessment,
-  claudeRaw: string
-): Promise<Record<string, number>> {
-  const prompt = GPT_VALIDATION_PROMPT(dims, assessment, claudeRaw)
-
-  const response = await openai.chat.completions.create({
-    model: 'gpt-4o',
-    max_tokens: 4096,
-    messages: [
-      {
-        role: 'system',
-        content: 'You are a licensed Bahamian quantity surveyor. Output only valid JSON arrays.',
-      },
-      { role: 'user', content: prompt },
-    ],
-  })
-
-  const text = response.choices[0]?.message?.content || '[]'
-  const jsonMatch = text.match(/\[[\s\S]*\]/)
-  if (!jsonMatch) return {}
-
-  const sections = JSON.parse(jsonMatch[0]) as { trade: string; items: { itemCode: string; quantity: number }[] }[]
-  const quantities: Record<string, number> = {}
-  sections.forEach(section => {
-    section.items.forEach(item => { quantities[item.itemCode] = item.quantity })
-  })
-  return quantities
-}
 
 /**
  * Cross-validate Claude vs GPT-4o vs formula engine.
@@ -335,56 +266,67 @@ export async function runDualTakeoff(
     tile_adhesive: formulaResult.tiling.adhesive,
   }
 
-  // Run Claude takeoff with raw prompt for GPT to validate
+  // Run Claude takeoff (required)
   const claudePrompt = CLAUDE_TAKEOFF_PROMPT(dims, assessment)
-  let claudeQty: Record<string, number> = {}
-  let claudeRawOutput = JSON.stringify(formulaQty)  // fallback
+  const claudeQty: Record<string, number> = {}
+  let claudeRawOutput = ''
 
+  const claudeContent: Anthropic.MessageParam['content'] = []
+  if (pdfBase64) {
+    claudeContent.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } } as unknown as Anthropic.TextBlockParam)
+  }
+  claudeContent.push({ type: 'text', text: claudePrompt })
+
+  let claudeResp: Anthropic.Message
   try {
-    const claudeContent: Anthropic.MessageParam['content'] = []
-    if (pdfBase64) {
-      claudeContent.push({ type: 'document', source: { type: 'base64', media_type: 'application/pdf', data: pdfBase64 } } as unknown as Anthropic.TextBlockParam)
-    }
-    claudeContent.push({ type: 'text', text: claudePrompt })
-
-    const claudeResp = await anthropic.messages.create({
-      model: 'claude-opus-4-6',
-      max_tokens: 4096,
+    claudeResp = await anthropic.messages.create({
+      model: 'claude-sonnet-4-6',
+      max_tokens: 3000,
       messages: [{ role: 'user', content: claudeContent }],
     })
-    const claudeText = claudeResp.content[0].type === 'text' ? claudeResp.content[0].text : '[]'
+  } catch (err) {
+    throw new AIUnavailableError('Claude takeoff failed', err)
+  }
+  try {
+    const claudeText = claudeResp.content[0]?.type === 'text' ? claudeResp.content[0].text : ''
     claudeRawOutput = claudeText
     const jsonMatch = claudeText.match(/\[[\s\S]*\]/)
     if (jsonMatch) {
       const sections = JSON.parse(jsonMatch[0]) as { trade: string; items: { itemCode: string; quantity: number }[] }[]
-      sections.forEach(s => s.items.forEach(i => { claudeQty[i.itemCode] = i.quantity }))
+      sections.forEach(s => (s.items || []).forEach(i => { if (typeof i.quantity === 'number') claudeQty[i.itemCode] = i.quantity }))
     }
   } catch (err) {
-    console.error('Claude takeoff error:', err)
-    claudeQty = { ...formulaQty }
+    console.error('Claude takeoff parse error:', (err as Error)?.message)
+  }
+  if (Object.keys(claudeQty).length === 0) {
+    throw new AIUnavailableError('Claude takeoff returned no usable quantities')
   }
 
-  // Run GPT-4o validation simultaneously
+  // Run GPT-4o validation (optional cross-check)
   let gptQty: Record<string, number> = {}
-  try {
-    const gptResp = await openai.chat.completions.create({
-      model: 'gpt-4o',
-      max_tokens: 4096,
-      messages: [
-        { role: 'system', content: 'You are a licensed Bahamian quantity surveyor. Output only valid JSON arrays.' },
-        { role: 'user', content: GPT_VALIDATION_PROMPT(dims, assessment, claudeRawOutput.slice(0, 2000)) },
-      ],
-    })
-    const gptText = gptResp.choices[0]?.message?.content || '[]'
-    const jsonMatch = gptText.match(/\[[\s\S]*\]/)
-    if (jsonMatch) {
-      const sections = JSON.parse(jsonMatch[0]) as { trade: string; items: { itemCode: string; quantity: number }[] }[]
-      sections.forEach(s => s.items.forEach(i => { gptQty[i.itemCode] = i.quantity }))
+  let gptOk = false
+  if (process.env.OPENAI_API_KEY) {
+    try {
+      const gptResp = await openai.chat.completions.create({
+        model: 'gpt-4o',
+        max_tokens: 3000,
+        messages: [
+          { role: 'system', content: 'You are a licensed Bahamian quantity surveyor. Output only valid JSON arrays.' },
+          { role: 'user', content: GPT_VALIDATION_PROMPT(dims, assessment, claudeRawOutput.slice(0, 2000)) },
+        ],
+      })
+      const gptText = gptResp.choices[0]?.message?.content || ''
+      const jsonMatch = gptText.match(/\[[\s\S]*\]/)
+      if (jsonMatch) {
+        const sections = JSON.parse(jsonMatch[0]) as { trade: string; items: { itemCode: string; quantity: number }[] }[]
+        sections.forEach(s => (s.items || []).forEach(i => { if (typeof i.quantity === 'number') gptQty[i.itemCode] = i.quantity }))
+      }
+      gptOk = Object.keys(gptQty).length > 0
+    } catch (err) {
+      console.error('GPT-4o validation error:', (err as Error)?.message)
     }
-  } catch (err) {
-    console.error('GPT-4o validation error:', err)
-    gptQty = { ...formulaQty }
   }
+  if (!gptOk) gptQty = {}
 
   // Cross-validate
   const { quantities: validated } = crossValidate(claudeQty, gptQty, formulaQty)
@@ -476,6 +418,14 @@ export async function runDualTakeoff(
       mediumPct: Math.round((medCount / total) * 100),
       lowPct: Math.round((lowCount / total) * 100),
       overallScore: Math.round(((highCount * 95 + medCount * 75 + lowCount * 55) / total)),
+    },
+    aiStatus: {
+      claude: true,
+      gpt: gptOk,
+      dualAI: gptOk,
+      label: gptOk
+        ? 'Dual AI: Claude takeoff cross-checked by GPT-4o and the formula engine'
+        : 'Claude takeoff cross-checked by the formula engine (GPT-4o cross-check unavailable)',
     },
   }
 }

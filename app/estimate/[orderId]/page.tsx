@@ -1,5 +1,5 @@
 'use client'
-import { useState, useRef } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useParams } from 'next/navigation'
 import { Upload, Download, Loader2, CheckCircle, FileText, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
@@ -38,6 +38,26 @@ export default function EstimatePage() {
   const [error, setError] = useState('')
 
   const resultRef = useRef<HTMLDivElement>(null)
+
+  // Server-side payment check: the paid service type comes from the order / Stripe session.
+  const [sessionId, setSessionId] = useState<string | null>(null)
+  const [payment, setPayment] = useState<'checking' | 'paid' | 'unpaid'>('checking')
+  const [payError, setPayError] = useState('')
+  useEffect(() => {
+    const sp = new URLSearchParams(window.location.search)
+    const sid = sp.get('session_id')
+    setSessionId(sid)
+    const qs = new URLSearchParams({ scope: 'any' })
+    if (sid) qs.set('session_id', sid)
+    if (orderId && orderId !== 'new') qs.set('orderId', orderId)
+    fetch(`/api/verify-payment?${qs}`)
+      .then(async r => {
+        const d = await r.json().catch(() => ({}))
+        if (r.ok && d.paid && SERVICE_TYPES[d.type]) { setServiceType(d.type); setPayment('paid') }
+        else { setPayment('unpaid'); setPayError(d.error || 'Payment required. Please purchase this service first.') }
+      })
+      .catch(() => { setPayment('unpaid'); setPayError('Could not verify your payment. Please refresh the page.') })
+  }, [orderId])
 
   async function handleFileSelect(f: File) {
     if (f.type !== 'application/pdf') { setError('Only PDF files are accepted.'); return }
@@ -80,10 +100,13 @@ export default function EstimatePage() {
       const res = await fetch(meta.endpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ fileUrl, brief, orderId, serviceType }),
+        body: JSON.stringify({ fileUrl, brief, orderId: orderId !== 'new' ? orderId : null, sessionId, serviceType }),
       })
 
-      if (!res.ok) throw new Error('Generation failed')
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}))
+        throw new Error(data.error || 'Generation failed. Please try again.')
+      }
 
       const reader = res.body?.getReader()
       const decoder = new TextDecoder()
@@ -193,16 +216,32 @@ export default function EstimatePage() {
           {meta?.name || 'Estimate'}
         </h1>
         <p className="mb-10" style={{ color: 'var(--text-secondary)' }}>
-          Upload your plans and fill in the project brief. Our AI quantity surveyor will generate a detailed estimate using claude-opus-4-6.
+          Upload your plans and fill in the project brief. Our AI quantity surveyor (Claude) will generate a detailed estimate. AI estimates are a starting point; verify with a qualified QS before tendering.
         </p>
 
-        {!done ? (
+        {payment !== 'paid' && (
+          <div className="p-8 rounded-sm text-center" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+            {payment === 'checking' ? (
+              <p style={{ color: 'var(--text-secondary)' }}>Checking your purchase…</p>
+            ) : (
+              <>
+                <AlertCircle size={40} style={{ color: 'var(--amber)', margin: '0 auto 12px' }} />
+                <h2 className="text-xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Payment required</h2>
+                <p className="text-sm mb-6" style={{ color: 'var(--text-secondary)' }}>{payError}</p>
+                <Link href="/services" className="inline-block px-6 py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>View Services &amp; Pricing</Link>
+              </>
+            )}
+          </div>
+        )}
+
+        {payment === 'paid' && !done ? (
           <div className="space-y-8">
-            {/* Service type selector */}
+            {/* Service type (fixed to what was purchased) */}
             <div>
               <label className="block text-xs font-bold mb-2 uppercase tracking-wider" style={{ color: 'var(--cyan)' }}>Service Type</label>
               <select
                 value={serviceType}
+                disabled
                 onChange={e => setServiceType(e.target.value)}
                 className="w-full p-3 rounded-sm text-sm"
                 style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)', color: 'var(--text-primary)' }}
@@ -323,7 +362,7 @@ export default function EstimatePage() {
               style={{ background: 'var(--cyan)', color: 'var(--navy)', opacity: generating || uploading || !brief.island || !brief.projectType ? 0.6 : 1 }}
             >
               {generating ? (
-                <><Loader2 size={16} className="animate-spin" /> Generating with claude-opus-4-6...</>
+                <><Loader2 size={16} className="animate-spin" /> Generating...</>
               ) : (
                 <><FileText size={16} /> Generate {meta?.isBoq ? 'Bill of Quantities' : 'Cost Estimate'}</>
               )}

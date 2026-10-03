@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { put } from '@vercel/blob'
+import { rateLimit } from '@/lib/rate-limit'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
+  const limited = rateLimit(req, 'upload', 10)
+  if (limited) return limited
   try {
     const formData = await req.formData()
     const file = formData.get('file') as File | null
