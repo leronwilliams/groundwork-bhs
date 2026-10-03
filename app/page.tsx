@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { Scale, Landmark, DraftingCompass, FileCheck, HardHat, ShieldCheck, Calculator } from 'lucide-react'
 import { VideoHero } from '@/components/ui/VideoHero'
 import { IslandTag } from '@/components/ui/IslandTag'
-import { HERO_IMAGE, GALLERY, CARD_IMAGES, PROPERTY_TAX_IMAGE } from '@/lib/site-images'
+import { HERO_IMAGE, CARD_IMAGES, PROPERTY_TAX_IMAGE } from '@/lib/site-images'
 
 const FEATURE_CARDS = [
   { category: 'legal', title: 'Legal & Land', desc: 'Title searches, quiet title, conveyancing, and stamp duty.', href: '/guides?cat=legal', icon: Scale, image: CARD_IMAGES.legal },
@@ -260,43 +260,6 @@ export default function HomePage() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Section 7 — Bahamian architecture gallery (verified locations, not Groundwork projects) */}
-      <section className="py-16 px-6 pb-28">
-        <div className="max-w-7xl mx-auto">
-          <div className="section-label mb-6">Island Architecture</div>
-          <h2 className="mb-4">Bahamian Homes</h2>
-          <p className="mb-14 text-lg max-w-2xl" style={{ color: 'var(--text-secondary)' }}>
-            Homes and historic buildings photographed across The Bahamas — hip roofs, shutters, verandahs
-            and island colour. Shown for local style and inspiration; these are not Groundwork projects.{' '}
-            <Link href="/credits" className="underline hover:text-white">Photo credits</Link>.
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            {GALLERY.map(({ image, island }) => (
-              <figure
-                key={image.src}
-                className="relative overflow-hidden rounded-sm group aspect-[4/3]"
-                style={{ border: '1px solid rgba(0,212,245,0.1)' }}
-              >
-                <Image
-                  src={image.src}
-                  alt={image.alt}
-                  fill
-                  sizes="(min-width: 1024px) 33vw, (min-width: 640px) 50vw, 100vw"
-                  className="object-cover transition-transform duration-700 group-hover:scale-105"
-                />
-                <figcaption
-                  className="absolute inset-x-0 bottom-0 p-4 flex flex-col gap-1.5 items-start"
-                  style={{ background: 'linear-gradient(to top, rgba(6,13,26,0.9), rgba(6,13,26,0))' }}
-                >
-                  <IslandTag island={island} />
-                  <span className="text-sm font-medium" style={{ color: 'rgba(240,244,255,0.92)' }}>{image.place}</span>
-                </figcaption>
-              </figure>
-            ))}
           </div>
         </div>
       </section>
