@@ -184,7 +184,7 @@ export default function HomePage() {
       <section className="py-24 px-6">
         <div className="max-w-7xl mx-auto">
           <div
-            className="rounded-sm p-14 text-center"
+            className="rounded-sm p-6 sm:p-10 md:p-14 text-center"
             style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}
           >
             <div className="section-label mb-6">Family Islands</div>
@@ -264,30 +264,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="py-14 px-6" style={{ borderTop: '1px solid var(--cyan-border)' }}>
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
-          <div>
-            <div className="text-xl font-black mb-1" style={{ fontFamily: 'Syne, sans-serif', color: 'white', letterSpacing: '-0.02em' }}>Groundwork</div>
-            <div className="text-sm" style={{ color: 'var(--muted)' }}>Build right. From the ground up.</div>
-          </div>
-          <div className="flex gap-6 text-sm font-medium flex-wrap justify-center" style={{ color: 'var(--text-secondary)' }}>
-            {['/guides', '/permits', '/property-tax', '/duty-exemptions', '/financing', '/partners', '/contractors', '/advisor', '/services', '/pricing', '/credits'].map(href => (
-              <Link key={href} href={href} className="hover:text-white transition-colors capitalize">
-                {href.replace('/', '')}
-              </Link>
-            ))}
-          </div>
-          <div className="flex flex-col items-center gap-2">
-            <div className="text-sm font-mono" style={{ color: 'var(--muted)' }}>© 2026 Groundwork BHS</div>
-            <div className="flex gap-4 text-xs" style={{ color: 'var(--muted)' }}>
-              <Link href="/terms" className="hover:text-white transition-colors">Terms</Link>
-              <Link href="/privacy" className="hover:text-white transition-colors">Privacy</Link>
-              <Link href="/disclaimer" className="hover:text-white transition-colors">Disclaimer</Link>
-            </div>
-          </div>
-        </div>
-      </footer>
     </div>
   )
 }

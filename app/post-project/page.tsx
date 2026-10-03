@@ -126,8 +126,8 @@ export default function PostProjectPage() {
           <p className="mb-8 text-sm" style={{ color: 'var(--text-secondary)' }}>
             We match your project to verified contractors on your island and notify you when one is interested.
           </p>
-          <a href="/sign-in" className="block py-3 rounded-sm font-bold text-sm mb-3" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
-          <a href="/sign-up" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>Create Free Account</a>
+          <a href="/sign-in?redirect_url=/post-project" className="block py-3 rounded-sm font-bold text-sm mb-3" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
+          <a href="/sign-up?redirect_url=/post-project" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>Create Free Account</a>
         </div>
       </div>
     )

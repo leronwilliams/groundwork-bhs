@@ -3,6 +3,10 @@ import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import type { LucideIcon } from 'lucide-react'
 import { FileText, Calculator, Users, MessageSquare, Home, Download, ArrowRight, CheckCircle, Clock, Package, AlertCircle, Zap, Send, Phone, Mail, Globe, Inbox } from 'lucide-react'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/dashboard', 'Your Dashboard', 'Your Groundwork orders and reports.', { noindex: true })
+
 
 const ORDER_LABELS: Record<string, string> = {
   lead: 'Contractor Lead',
@@ -48,8 +52,8 @@ export default async function DashboardPage() {
           <h1 className="text-3xl font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Sign in to access your dashboard</h1>
           <p className="mb-8" style={{ color: 'var(--text-secondary)' }}>Track your orders, projects, and advisor sessions.</p>
           <div className="flex flex-col gap-3">
-            <a href="/sign-in" className="block py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
-            <a href="/sign-up" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>Create Free Account</a>
+            <a href="/sign-in?redirect_url=/dashboard" className="block py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
+            <a href="/sign-up?redirect_url=/dashboard" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>Create Free Account</a>
           </div>
         </div>
       </div>

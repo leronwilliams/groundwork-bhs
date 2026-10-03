@@ -1,3 +1,7 @@
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/terms', 'Terms of Service', 'The terms that apply when you use Groundwork BHS.')
+
 export default function TermsPage() {
   return (
     <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: 'var(--navy)' }}>

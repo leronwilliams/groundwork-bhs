@@ -10,7 +10,7 @@ interface Review { id: string; authorName: string; rating: number; comment: stri
 interface Contractor {
   id: string; name: string; contactName: string | null; trade: string; island: string
   phone: string | null; whatsapp: string | null; email: string | null; website: string | null
-  description: string | null; imageUrl: string | null; verified: boolean; featuredTier: string | null
+  description: string | null; imageUrl: string | null; verified: boolean; featuredTier: string | null; isPlaceholder?: boolean
   reviews: Review[]
 }
 
@@ -125,7 +125,7 @@ export default function ContractorProfilePage() {
                   </span>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm" style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}>
-                    <AlertCircle size={12} strokeWidth={2} /> Pending verification
+                    <AlertCircle size={12} strokeWidth={2} /> {contractor.isPlaceholder ? 'Sample listing' : 'Pending verification'}
                   </span>
                 )}
               </div>
@@ -154,7 +154,7 @@ export default function ContractorProfilePage() {
           ) : (
             <div>
               <p className="text-sm mb-4" style={{ color: 'var(--text-secondary)' }}>Sign in to view this contractor&apos;s contact details.</p>
-              <a href="/sign-in" className="inline-block px-5 py-2.5 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
+              <a href={`/sign-in?redirect_url=/contractors/${id}`} className="inline-block px-5 py-2.5 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
             </div>
           )}
         </div>
@@ -204,7 +204,7 @@ export default function ContractorProfilePage() {
             </form>
           ) : (
             <p className="text-sm pt-2" style={{ color: 'var(--muted)' }}>
-              <a href="/sign-in" style={{ color: 'var(--cyan)' }}>Sign in</a> to leave a review.
+              <a href={`/sign-in?redirect_url=/contractors/${id}`} style={{ color: 'var(--cyan)' }}>Sign in</a> to leave a review.
             </p>
           )}
         </div>

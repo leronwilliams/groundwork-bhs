@@ -1,6 +1,10 @@
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/partners', 'Partner Directory', 'Hardware stores, HVAC suppliers, architects, attorneys and mortgage lenders trusted by the Groundwork community in The Bahamas.')
+
 
 const CATEGORY_META: Record<string, { label: string; desc: string; accent: string }> = {
   hardware:    { label: 'Hardware Suppliers',   desc: 'Building materials, tools, roofing, lumber', accent: 'var(--cyan)' },

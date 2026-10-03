@@ -2,6 +2,7 @@
 import { useEffect, useState } from 'react'
 import { Upload, CheckCircle, Loader2, AlertCircle, Download, ChevronDown, ChevronUp } from 'lucide-react'
 import Link from 'next/link'
+import { BOQ_DISCLAIMER, TRADE_DISPLAY } from '@/lib/boq/catalog'
 
 const ISLANDS = ['New Providence (Nassau)', 'Grand Bahama (Freeport)', 'Abaco', 'Eleuthera', 'Exuma', 'Andros', 'Long Island', 'Cat Island', 'Bimini', 'Berry Islands', 'San Salvador', 'Inagua', 'Other']
 
@@ -380,13 +381,19 @@ export default function BOQWizardPage() {
                 ${result.summary.grandTotalLow.toLocaleString()} – ${result.summary.grandTotalHigh.toLocaleString()}
               </p>
               <div className="grid grid-cols-2 gap-4 mt-4">
-                {[['Materials', result.summary.materialsCostLow],['Labour (est.)', result.summary.labourEstimateLow],['Permits', result.summary.permitFees],['Contingency', result.summary.contingency]].map(([label, val]) => (
+                {[['Materials', result.summary.materialsCostLow],['Labour, OH&P (est.)', result.summary.labourEstimateLow],['Permits', result.summary.permitFees],['Contingency', result.summary.contingency]].map(([label, val]) => (
                   <div key={label as string}>
                     <p className="text-xs" style={{ color: 'var(--muted)' }}>{label}</p>
                     <p className="font-bold" style={{ color: 'var(--text-primary)' }}>${(val as number).toLocaleString()}</p>
                   </div>
                 ))}
               </div>
+            </div>
+
+            {/* Budget-estimate disclaimer */}
+            <div className="p-4 rounded-sm" style={{ background: 'rgba(245,166,35,0.06)', border: '1px solid rgba(245,166,35,0.45)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'var(--amber)' }}>Budget estimate, not a QS quote</p>
+              <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{BOQ_DISCLAIMER}</p>
             </div>
 
             {/* Duty savings callout */}
@@ -418,7 +425,7 @@ export default function BOQWizardPage() {
               <div className="space-y-2">
                 {result.trades.map(t => (
                   <div key={t.trade} className="flex items-center justify-between p-3 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
-                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)', textTransform: 'capitalize' }}>{t.trade}</span>
+                    <span className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{TRADE_DISPLAY[t.trade] || t.trade}</span>
                     <span className="text-sm font-bold" style={{ color: 'var(--cyan)' }}>${t.subtotalLow.toLocaleString()} – ${t.subtotalHigh.toLocaleString()}</span>
                   </div>
                 ))}
@@ -459,8 +466,8 @@ export default function BOQWizardPage() {
               <button onClick={buildShoppingList} className="py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--amber)', color: '#1a0f00' }}>
                 Build Shopping List ({selectedItems.size} items)
               </button>
-              <Link href="/services" className="block text-center py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>
-                Get Hardware Store Quotes →
+              <Link href="/contractors" className="block text-center py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>
+                Find a Contractor →
               </Link>
             </div>
 

@@ -57,7 +57,6 @@ export const TIER_FEATURES: Record<Tier, string[]> = {
     'Everything in Pro',
     'Free contractor leads (unlimited)',
     'BOQ + hardware pricing reports',
-    'Hardware store quote service',
     'Direct contractor introductions',
     'Dedicated account support',
   ],

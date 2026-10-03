@@ -18,6 +18,7 @@ import { runDualTakeoff } from '@/lib/boq/takeoff-engine'
 import { calculateTotalDutySavings } from '@/lib/boq/duty-rates'
 import { generateBOQReport } from '@/lib/boq/report-generator'
 import { put } from '@vercel/blob'
+import { signedReportUrl } from '@/lib/report-link'
 import { prisma } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { verifyPaidAccess, recordAiRun, BOQ_TYPES } from '@/lib/payment'
@@ -88,7 +89,8 @@ export async function POST(req: NextRequest) {
     const pdfBytes = await generateBOQReport(takeoffResult, dimensions, projectName || 'My Project')
 
     // ── Step 4: Upload PDF to Vercel Blob ─────────────────────────────────
-    let reportUrl = null
+    let reportUrl: string | null = null      // private blob URL (stored in DB)
+    let reportDownloadUrl: string | null = null // signed app route returned to the client
     try {
       const blob = await put(
         `boq-reports/${orderId || 'session'}-${Date.now()}.pdf`,
@@ -96,6 +98,7 @@ export async function POST(req: NextRequest) {
         { access: 'private', token: process.env.BLOB_READ_WRITE_TOKEN }
       )
       reportUrl = blob.url
+      reportDownloadUrl = signedReportUrl(blob.pathname)
     } catch (blobErr) {
       console.error('[BOQ-V2] Blob upload error:', blobErr)
     }
@@ -164,7 +167,7 @@ export async function POST(req: NextRequest) {
         subtotalHigh: t.subtotalHigh,
       })),
       lineItems: takeoffResult.allItems,
-      reportUrl,
+      reportUrl: reportDownloadUrl,
       aiStatus: takeoffResult.aiStatus,
       modelUsed: {
         assessment: fileUrl ? 'claude-haiku-4-5' : null,

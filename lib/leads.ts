@@ -14,6 +14,7 @@
  */
 
 import { Prisma } from '@prisma/client'
+import { PLACEHOLDER_CONTRACTOR_IDS } from '@/lib/contractors'
 import { prisma } from '@/lib/db'
 import { sendLeadToContractor } from '@/lib/lead-emails'
 
@@ -48,6 +49,7 @@ export async function createAndDispatchLead(params: {
   const allContractors = await prisma.contractor.findMany({
     where: {
       listingStatus: 'active',
+      id: { notIn: PLACEHOLDER_CONTRACTOR_IDS }, // never send leads to placeholder listings
       island: { contains: islandKey.includes('nassau') ? 'nassau' : islandKey, mode: 'insensitive' },
     },
   })

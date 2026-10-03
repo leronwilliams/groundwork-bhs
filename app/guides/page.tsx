@@ -4,6 +4,10 @@ import { guideImage } from '@/lib/site-images'
 import { prisma } from '@/lib/db'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
 import { SectionBadge } from '@/components/ui/SectionBadge'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/guides', 'Building Guides for The Bahamas', 'Step-by-step guides to permits, building codes, construction costs, land and property ownership in The Bahamas.')
+
 
 export const revalidate = 60
 

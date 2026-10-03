@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
       groupedBySupplier: groupedList,
       grandTotal,
       itemCount: selectedItems.length,
-      tip: 'Request hardware store quotes to compare real prices and save more.',
+      tip: 'Prices are typical Nassau retail rates. Confirm current prices with each store before buying.',
     })
   } catch (error) {
     return NextResponse.json({ error: 'Shopping list failed', detail: String(error) }, { status: 500 })

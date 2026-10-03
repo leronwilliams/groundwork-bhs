@@ -1,3 +1,7 @@
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/disclaimer', 'Disclaimer', 'Important information about the estimates, guides and AI advice provided by Groundwork BHS.')
+
 export default function DisclaimerPage() {
   return (
     <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: 'var(--navy)' }}>

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { stripe, PRICE_IDS, PriceKey } from '@/lib/stripe'
 import { prisma } from '@/lib/db'
+import { HARDWARE_QUOTES_ENABLED } from '@/lib/features'
 
 export async function POST(req: NextRequest) {
   try {
@@ -10,6 +11,10 @@ export async function POST(req: NextRequest) {
 
     if (!priceKey || !PRICE_IDS[priceKey as PriceKey]) {
       return NextResponse.json({ error: 'Invalid price key' }, { status: 400 })
+    }
+
+    if (priceKey === 'boq_quotes' && !HARDWARE_QUOTES_ENABLED) {
+      return NextResponse.json({ error: 'Hardware store quotes are not available yet' }, { status: 400 })
     }
 
     const priceId = PRICE_IDS[priceKey as PriceKey]

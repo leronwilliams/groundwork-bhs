@@ -7,6 +7,7 @@
 
 import type { DualTakeoffResult } from './takeoff-engine'
 import type { ProjectDimensions } from './formulas'
+import { BOQ_DISCLAIMER } from './catalog'
 
 function fmtCurrency(n: number): string {
   return '$' + n.toLocaleString('en-US', { minimumFractionDigits: 0, maximumFractionDigits: 0 })
@@ -111,12 +112,20 @@ export async function generateBOQReport(
   doc.setFontSize(8)
   doc.setFont('helvetica', 'normal')
   doc.setTextColor(...GREY as [number, number, number])
-  doc.text('Materials + Labour + Permits + Contingency | Island premium applied', 28, 231)
+  doc.text('Materials + Labour/OH&P + Permits + Contingency | Island premium applied', 28, 231)
 
-  // Disclaimer
+  // Disclaimer (prominent): budget estimate, not a QS quote
+  doc.setDrawColor(...AMBER)
+  doc.setLineWidth(0.4)
+  doc.roundedRect(20, 243, 170, 40, 2, 2, 'S')
+  doc.setFont('helvetica', 'bold')
+  doc.setFontSize(9)
+  doc.setTextColor(...AMBER)
+  doc.text('BUDGET ESTIMATE — NOT A QUANTITY SURVEYOR\'S QUOTE', 25, 251)
+  doc.setFont('helvetica', 'normal')
   doc.setFontSize(7.5)
-  doc.text('This is a preliminary estimate only. Engage a licensed QS for formal certification before contractor tendering.', 20, 265)
-  doc.text('Prices based on 2025 Nassau market rates. Family Island transport premium applied where applicable.', 20, 271)
+  doc.setTextColor(...GREY as [number, number, number])
+  doc.text(doc.splitTextToSize(BOQ_DISCLAIMER + ' Family Island transport premium applied where applicable.', 160), 25, 257)
 
   // Bottom band
   doc.setFillColor(...CYAN)
@@ -364,7 +373,6 @@ export async function generateBOQReport(
 
   const services = [
     ['BOQ + Hardware Store Comparison', '$275', 'Live prices from registered Nassau hardware stores. Cheapest option per item highlighted.'],
-    ['BOQ + Hardware Store Quotes', '$375', 'We contact stores directly. Real quotes returned in 48 hours. Average saving: $4,000–$12,000.'],
     ['Professional BOQ Review', '$650', 'Licensed QS reviews and validates this BOQ. Formal document with QS stamp for tendering.'],
   ]
 
@@ -393,9 +401,7 @@ export async function generateBOQReport(
 
   // Disclaimer
   doc.setFontSize(7)
-  doc.text('DISCLAIMER: This BOQ is a preliminary estimate prepared by Groundwork BHS using AI quantity takeoff cross-validated against Bahamian', 20, 270)
-  doc.text('construction standards. It does not constitute a formal valuation or professional QS certification. Always engage a licensed QS before', 20, 275)
-  doc.text('contract award for projects exceeding $100,000. © 2026 Groundwork BHS | groundworksbhs.com', 20, 280)
+  doc.text(doc.splitTextToSize('DISCLAIMER: ' + BOQ_DISCLAIMER + ' It is not a formal valuation or professional QS certification. © 2026 Groundwork BHS | groundworksbhs.com', 170), 20, 266)
 
   doc.setFillColor(...CYAN)
   doc.rect(0, 295, 210, 2, 'F')

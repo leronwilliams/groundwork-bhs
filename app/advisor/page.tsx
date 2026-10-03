@@ -111,7 +111,7 @@ export default function AdvisorPage() {
   useEffect(() => { bottomRef.current?.scrollIntoView({ behavior: 'smooth' }) }, [messages])
 
   return (
-    <div className="min-h-screen pt-20" style={{ background: 'var(--navy)' }}>
+    <div className="min-h-screen pt-24 md:pt-28" style={{ background: 'var(--navy)' }}>
       <div className="max-w-7xl mx-auto px-6 py-8">
         <div className="mb-8">
           <div className="section-label mb-2">AI · Build Advisor</div>
@@ -121,9 +121,9 @@ export default function AdvisorPage() {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6" style={{ height: 'calc(100vh - 280px)' }}>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[calc(100vh-280px)]">
           {/* Suggested questions */}
-          <div className="lg:col-span-1 overflow-y-auto">
+          <div className="lg:col-span-1 overflow-y-auto max-h-64 lg:max-h-none">
             <div className="text-xs uppercase tracking-wider mb-4 font-mono" style={{ color: 'var(--muted)' }}>Suggested questions</div>
             <div className="space-y-2">
               {SUGGESTED_QUESTIONS.map((item, i) => {
@@ -141,7 +141,7 @@ export default function AdvisorPage() {
           </div>
 
           {/* Chat */}
-          <div className="lg:col-span-2 flex flex-col" style={{ border: '1px solid var(--cyan-border)', borderRadius: 2, background: 'var(--navy-surface)' }}>
+          <div className="lg:col-span-2 flex flex-col h-[70vh] min-h-[420px] lg:h-auto lg:min-h-0" style={{ border: '1px solid var(--cyan-border)', borderRadius: 2, background: 'var(--navy-surface)' }}>
             <div className="flex-1 overflow-y-auto p-6 space-y-4">
               {messages.length === 0 && (
                 <div className="flex flex-col items-center justify-center h-full text-center">
@@ -160,7 +160,7 @@ export default function AdvisorPage() {
                     <div key={i} className="rounded-sm p-4" style={{ background: 'rgba(0,212,245,0.06)', border: '1px solid var(--cyan-border)', maxWidth: '85%' }}>
                       <p className="text-sm mb-3" style={{ color: 'var(--text-secondary)' }}>{msg.content}</p>
                       {msg.limitType === 'anon' ? (
-                        <Link href="/sign-up" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>
+                        <Link href="/sign-up?redirect_url=/advisor" className="inline-flex items-center gap-2 px-5 py-2.5 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>
                           Create Free Account
                         </Link>
                       ) : (

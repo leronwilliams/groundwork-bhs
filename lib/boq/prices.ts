@@ -36,6 +36,27 @@ export const DEFAULT_PRICES: Record<string, number> = {
   toilet:              285.00,
   sink_bathroom:       195.00,
   shower_unit:         350.00,
+  // Added Oct 2026 (indicative Nassau supply prices, BSD; admin can override
+  // any of these by adding a PriceList row with the same itemCode)
+  ready_mix_concrete:  285.00,  // per cubic yard, delivered
+  concrete_block_6:      3.60,
+  roof_tile_square:    650.00,  // per 100 sqft incl. underlayment
+  hurricane_strap:       2.75,
+  window_impact:       850.00,  // ~3x4 impact-rated, installed frame
+  door_exterior:       650.00,  // solid exterior door + frame + hardware
+  door_interior:       220.00,  // pre-hung interior door + hardware
+  sliding_door_impact: 2400.00, // 6ft impact-rated sliding door
+  kitchen_sink:        250.00,
+  water_heater:        650.00,  // 40-50 gal electric
+  septic_system:      6500.00,  // tank + field, typical residential
+  light_fixture:        45.00,
+  kitchen_cabinets_lf: 350.00,  // base + wall cabinets + counter, per linear ft
+  ceiling_board:        18.00,  // 4x8 1/2" gypsum ceiling board
+  plumbing_fittings_set: 350.00, // elbows, tees, valves, traps, cement for one wet area
+  electrical_rough_in:   38.00, // per point: box, device/cover, conduit, 12/2 run
+  electrical_service:   650.00, // meter base, main disconnect, grounding
+  roof_underlayment_square: 85.00, // synthetic underlayment + ice&water at eaves, per 100 sqft
+  fascia_soffit_lf:     14.00, // fascia board + vented soffit, per linear ft
 }
 
 export const PRICE_LIST_SEED = [
@@ -68,6 +89,25 @@ export const PRICE_LIST_SEED = [
   { itemCode: 'toilet',              itemName: 'Toilet (standard)',        unit: 'each',   unitPrice: 285.00, supplier: 'Plumbing Supply' },
   { itemCode: 'sink_bathroom',       itemName: 'Bathroom Sink',           unit: 'each',   unitPrice: 195.00, supplier: 'Plumbing Supply' },
   { itemCode: 'shower_unit',         itemName: 'Shower Unit',             unit: 'each',   unitPrice: 350.00, supplier: 'Plumbing Supply' },
+  { itemCode: 'ready_mix_concrete',  itemName: 'Ready-mix Concrete (yd³)', unit: 'yd3',    unitPrice: 285.00, supplier: 'Ready-mix Supplier' },
+  { itemCode: 'concrete_block_6',    itemName: 'Concrete Block 6"',       unit: 'each',   unitPrice: 3.60,  supplier: 'Kelly\'s / RND' },
+  { itemCode: 'roof_tile_square',    itemName: 'Roof Tile (per square)',  unit: 'square', unitPrice: 650.00, supplier: 'Roofing Supplier' },
+  { itemCode: 'hurricane_strap',     itemName: 'Hurricane Strap',         unit: 'each',   unitPrice: 2.75,  supplier: 'Kelly\'s / RND' },
+  { itemCode: 'window_impact',       itemName: 'Impact Window ~3x4',      unit: 'each',   unitPrice: 850.00, supplier: 'Window Supplier' },
+  { itemCode: 'door_exterior',       itemName: 'Exterior Door + Hardware',unit: 'each',   unitPrice: 650.00, supplier: 'Kelly\'s / RND' },
+  { itemCode: 'door_interior',       itemName: 'Interior Door (pre-hung)',unit: 'each',   unitPrice: 220.00, supplier: 'Kelly\'s / RND' },
+  { itemCode: 'sliding_door_impact', itemName: 'Impact Sliding Door 6ft', unit: 'each',   unitPrice: 2400.00, supplier: 'Window Supplier' },
+  { itemCode: 'kitchen_sink',        itemName: 'Kitchen Sink + Faucet',   unit: 'each',   unitPrice: 250.00, supplier: 'Plumbing Supply' },
+  { itemCode: 'water_heater',        itemName: 'Water Heater 40-50gal',   unit: 'each',   unitPrice: 650.00, supplier: 'Plumbing Supply' },
+  { itemCode: 'septic_system',       itemName: 'Septic Tank + Field',     unit: 'each',   unitPrice: 6500.00, supplier: 'Plumbing Supply' },
+  { itemCode: 'light_fixture',       itemName: 'Light Fixture',           unit: 'each',   unitPrice: 45.00, supplier: 'Electrical Supply' },
+  { itemCode: 'kitchen_cabinets_lf', itemName: 'Kitchen Cabinets + Counter', unit: 'lft', unitPrice: 350.00, supplier: 'Cabinet Supplier' },
+  { itemCode: 'plumbing_fittings_set', itemName: 'Plumbing Fittings (set per wet area)', unit: 'set', unitPrice: 350.00, supplier: 'Plumbing Supply' },
+  { itemCode: 'electrical_rough_in', itemName: 'Electrical Rough-in (per point)', unit: 'point', unitPrice: 38.00, supplier: 'Electrical Supply' },
+  { itemCode: 'electrical_service',  itemName: 'Electrical Service / Meter Base', unit: 'each', unitPrice: 650.00, supplier: 'Electrical Supply' },
+  { itemCode: 'roof_underlayment_square', itemName: 'Roof Underlayment (per square)', unit: 'square', unitPrice: 85.00, supplier: 'Roofing Supplier' },
+  { itemCode: 'fascia_soffit_lf',    itemName: 'Fascia + Soffit (lft)',   unit: 'lft',    unitPrice: 14.00, supplier: 'Kelly\'s / RND' },
+  { itemCode: 'ceiling_board',       itemName: 'Ceiling Board 4x8',       unit: 'sheet',  unitPrice: 18.00, supplier: 'Kelly\'s / RND' },
 ]
 
 /**
@@ -77,8 +117,8 @@ export async function getPrices(): Promise<Record<string, number>> {
   try {
     const { prisma } = await import('@/lib/db')
     const items = await prisma.priceList.findMany()
-    if (items.length === 0) return DEFAULT_PRICES
-    const prices: Record<string, number> = {}
+    // Admin-maintained PriceList rows win; defaults fill any item without a row
+    const prices: Record<string, number> = { ...DEFAULT_PRICES }
     items.forEach(item => { prices[item.itemCode] = item.unitPrice })
     return prices
   } catch {

@@ -22,6 +22,7 @@ import { runFormulaEngine, applyIslandPremium, FINISH_MULTIPLIERS } from './form
 import type { ProjectDimensions } from './formulas'
 import type { DrawingAssessment } from './drawing-assessment'
 import { getPrices } from './prices'
+import { ITEM_CATALOG, TRADE_DISPLAY } from './catalog'
 import { AIUnavailableError } from '@/lib/ai-errors'
 
 const anthropic = new Anthropic({ apiKey: process.env.ANTHROPIC_API_KEY })
@@ -112,8 +113,14 @@ Output a JSON array of takeoff sections. Each section is one trade:
 TRADE LIST (use exactly these trade names):
 foundation, structure, roofing, plumbing, electrical, painting, tiling, joinery, landscaping
 
-ITEM CODES to use (match exactly):
-concrete_block_8, cement_94lb, sand, gravel, rebar_4, tie_wire, roofing_sheet_26g, ridge_cap, roofing_screw, lumber_2x4x8, lumber_2x6x8, plywood_3_4, pvc_pipe_4inch, cpvc_pipe_half, plumbing_fittings, wire_romex_14, electrical_outlet, breaker_panel, exterior_paint_5gal, interior_paint_5gal, primer_5gal, floor_tile_sqft, wall_tile_sqft, tile_grout, tile_adhesive, fill_sand, toilet, sink_bathroom, shower_unit
+ITEM CODES to use (match exactly; unit in brackets):
+${Object.entries(ITEM_CATALOG).map(([code, c]) => `${code} [${c.unit}]`).join(', ')}
+
+KEY CONVENTIONS:
+- Slab, footings, bond beams and cell fill are ready_mix_concrete (yd³); cement_94lb is only for block mortar and render
+- roofing_sheet_26g: 10ft sheet covers ~25 sqft after laps
+- plumbing_fittings_set is one SET per wet area (each bathroom + kitchen + laundry), not individual fittings
+- concrete_block_6 is for interior partitions
 
 RULES:
 - Only output the JSON array, no prose before or after
@@ -137,7 +144,7 @@ PROJECT DIMENSIONS:
 - Bathrooms: ${dims.numberOfBathrooms} | Bedrooms: ${dims.numberOfBedrooms}
 
 YOUR TASK: Independently verify or challenge each quantity. Use your own calculations.
-Apply Bahamian construction standards: 12.5 blocks/sqm, 1 cement bag per 25 blocks, etc.
+Apply Bahamian construction standards: 12.5 blocks/sqm; structural concrete as ready-mix yd³; cement bags only for mortar (1 per ~33 blocks) and render (1 per ~70 sqft); 26g roofing sheet ≈25 sqft effective; plumbing fittings are one set per wet area.
 
 Output a JSON array in the same format as the input. Where you agree: use same quantity. 
 Where you differ by >10%: use your calculated quantity and explain in notes.
@@ -194,28 +201,6 @@ function crossValidate(
   return { quantities: result }
 }
 
-// Trade assignment by item code
-const ITEM_TRADES: Record<string, string> = {
-  concrete_block_8: 'foundation', cement_94lb: 'foundation', sand: 'foundation',
-  gravel: 'foundation', rebar_4: 'foundation', tie_wire: 'foundation', fill_sand: 'foundation',
-  roofing_sheet_26g: 'roofing', ridge_cap: 'roofing', roofing_screw: 'roofing',
-  lumber_2x4x8: 'roofing', lumber_2x6x8: 'roofing', plywood_3_4: 'roofing',
-  pvc_pipe_4inch: 'plumbing', cpvc_pipe_half: 'plumbing', plumbing_fittings: 'plumbing',
-  toilet: 'plumbing', sink_bathroom: 'plumbing', shower_unit: 'plumbing',
-  wire_romex_14: 'electrical', electrical_outlet: 'electrical', breaker_panel: 'electrical',
-  exterior_paint_5gal: 'painting', interior_paint_5gal: 'painting', primer_5gal: 'painting',
-  floor_tile_sqft: 'tiling', wall_tile_sqft: 'tiling', tile_grout: 'tiling', tile_adhesive: 'tiling',
-}
-
-const TRADE_DISPLAY: Record<string, string> = {
-  foundation: 'Foundation & Structure',
-  roofing: 'Roofing',
-  plumbing: 'Plumbing',
-  electrical: 'Electrical',
-  painting: 'Painting',
-  tiling: 'Tiling & Flooring',
-}
-
 /**
  * Full dual AI takeoff with formula cross-validation.
  */
@@ -234,37 +219,7 @@ export async function runDualTakeoff(
 
   // Run formula engine first (always available)
   const formulaResult = runFormulaEngine(dims)
-  const formulaQty: Record<string, number> = {
-    concrete_block_8: formulaResult.blocks,
-    cement_94lb: formulaResult.cement,
-    sand: formulaResult.aggregates.sandYards,
-    gravel: formulaResult.aggregates.gravelYards,
-    fill_sand: formulaResult.aggregates.fillYards,
-    rebar_4: formulaResult.rebar.fourBar,
-    tie_wire: formulaResult.rebar.tieWire,
-    roofing_sheet_26g: formulaResult.roofing.roofingSheets,
-    ridge_cap: formulaResult.roofing.ridgeCap,
-    roofing_screw: formulaResult.roofing.screwBoxes,
-    lumber_2x4x8: formulaResult.lumber.twoByFour,
-    lumber_2x6x8: formulaResult.lumber.twoBy6,
-    plywood_3_4: formulaResult.lumber.plywood,
-    pvc_pipe_4inch: formulaResult.plumbing.pvcPipe4inch,
-    cpvc_pipe_half: formulaResult.plumbing.cpvcPipeHalfInch,
-    plumbing_fittings: formulaResult.plumbing.fittings,
-    toilet: formulaResult.plumbing.fixtures,
-    sink_bathroom: formulaResult.plumbing.fixtures,
-    shower_unit: formulaResult.plumbing.fixtures,
-    wire_romex_14: formulaResult.electrical.wireRomex14,
-    electrical_outlet: formulaResult.electrical.outlets,
-    breaker_panel: formulaResult.electrical.breakerPanel,
-    exterior_paint_5gal: formulaResult.painting.exteriorPaint5Gal,
-    interior_paint_5gal: formulaResult.painting.interiorPaint5Gal,
-    primer_5gal: formulaResult.painting.primer5Gal,
-    floor_tile_sqft: formulaResult.tiling.floorTiles,
-    wall_tile_sqft: formulaResult.tiling.wallTiles,
-    tile_grout: formulaResult.tiling.grout,
-    tile_adhesive: formulaResult.tiling.adhesive,
-  }
+  const formulaQty: Record<string, number> = { ...formulaResult.quantities }
 
   // Run Claude takeoff (required)
   const claudePrompt = CLAUDE_TAKEOFF_PROMPT(dims, assessment)
@@ -339,7 +294,7 @@ export async function runDualTakeoff(
   const tradeMap: Record<string, LineItem[]> = {}
   
   Object.entries(validated).forEach(([itemCode, { qty, confidence, pct }]) => {
-    const trade = ITEM_TRADES[itemCode] || 'other'
+    const trade = ITEM_CATALOG[itemCode]?.trade || 'other'
     if (!tradeMap[trade]) tradeMap[trade] = []
 
     const basePrice = (prices[itemCode] || 0) * finishMult
@@ -380,9 +335,11 @@ export async function runDualTakeoff(
   const materialsCostLow = Math.round(applyIslandPremium(rawMaterialsLow, dims.island))
   const materialsCostHigh = Math.round(applyIslandPremium(rawMaterialsHigh, dims.island))
 
-  // Labour: 60-70% of materials (Bahamian standard)
-  const labourEstimateLow = Math.round(materialsCostLow * 0.60)
-  const labourEstimateHigh = Math.round(materialsCostHigh * 0.70)
+  // Labour, general conditions (scaffold, equipment, temp services, insurance)
+  // and contractor overhead & profit: 90-110% of materials. On Bahamian GC
+  // builds these typically make up roughly half of the construction cost.
+  const labourEstimateLow = Math.round(materialsCostLow * 0.90)
+  const labourEstimateHigh = Math.round(materialsCostHigh * 1.10)
 
   // Permit fees (Bahamas: ~1.5% of construction cost)
   const permitFees = Math.round((materialsCostLow + labourEstimateLow) * 0.015)
@@ -431,50 +388,9 @@ export async function runDualTakeoff(
 }
 
 function getItemDescription(code: string): string {
-  const descriptions: Record<string, string> = {
-    concrete_block_8: 'Concrete Blocks 8" Hollow',
-    cement_94lb: 'Cement (94lb bag)',
-    sand: 'Sand',
-    gravel: 'Gravel',
-    rebar_4: 'Rebar #4 (20ft stick)',
-    tie_wire: 'Tie Wire',
-    fill_sand: 'Fill Sand',
-    roofing_sheet_26g: 'Roofing Sheet 26g 10ft',
-    ridge_cap: 'Ridge Cap',
-    roofing_screw: 'Roofing Screws (box 250)',
-    lumber_2x4x8: 'Lumber 2×4×8',
-    lumber_2x6x8: 'Lumber 2×6×8',
-    plywood_3_4: 'Plywood 3/4" Sheet',
-    pvc_pipe_4inch: 'PVC Pipe 4" (10ft)',
-    cpvc_pipe_half: 'CPVC Pipe 1/2" (10ft)',
-    plumbing_fittings: 'Plumbing Fittings (set)',
-    toilet: 'Toilet (standard)',
-    sink_bathroom: 'Bathroom Sink',
-    shower_unit: 'Shower Unit',
-    wire_romex_14: 'Wire Romex 14/2 (50ft roll)',
-    electrical_outlet: 'Electrical Outlet',
-    breaker_panel: 'Breaker Panel 20-circuit',
-    exterior_paint_5gal: 'Exterior Paint (5 gal)',
-    interior_paint_5gal: 'Interior Paint (5 gal)',
-    primer_5gal: 'Primer (5 gal)',
-    floor_tile_sqft: 'Floor Tile',
-    wall_tile_sqft: 'Wall Tile',
-    tile_grout: 'Tile Grout (50lb bag)',
-    tile_adhesive: 'Tile Adhesive (50lb bag)',
-  }
-  return descriptions[code] || code
+  return ITEM_CATALOG[code]?.description || code
 }
 
 function getUnit(code: string): string {
-  const units: Record<string, string> = {
-    concrete_block_8: 'each', cement_94lb: 'bag', sand: 'yd³', gravel: 'yd³',
-    fill_sand: 'yd³', rebar_4: 'sticks', tie_wire: 'lbs', roofing_sheet_26g: 'sheets',
-    ridge_cap: 'lft', roofing_screw: 'boxes', lumber_2x4x8: 'pcs', lumber_2x6x8: 'pcs',
-    plywood_3_4: 'sheets', pvc_pipe_4inch: 'pcs', cpvc_pipe_half: 'pcs',
-    plumbing_fittings: 'sets', toilet: 'each', sink_bathroom: 'each', shower_unit: 'each',
-    wire_romex_14: 'rolls', electrical_outlet: 'each', breaker_panel: 'each',
-    exterior_paint_5gal: 'buckets', interior_paint_5gal: 'buckets', primer_5gal: 'buckets',
-    floor_tile_sqft: 'sqft', wall_tile_sqft: 'sqft', tile_grout: 'bags', tile_adhesive: 'bags',
-  }
-  return units[code] || 'each'
+  return ITEM_CATALOG[code]?.unit || 'each'
 }

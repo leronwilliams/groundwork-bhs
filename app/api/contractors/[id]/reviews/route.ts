@@ -7,6 +7,7 @@
 import { NextResponse } from 'next/server'
 import { auth, currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
+import { isHiddenContractor } from '@/lib/contractors'
 
 export const runtime = 'nodejs'
 
@@ -27,7 +28,7 @@ export async function POST(request: Request, { params }: { params: Promise<{ id:
     const comment = typeof body.comment === 'string' ? body.comment.trim() : ''
 
     const contractor = await prisma.contractor.findUnique({ where: { id } })
-    if (!contractor || contractor.listingStatus !== 'active') {
+    if (!contractor || contractor.listingStatus !== 'active' || isHiddenContractor(contractor.id)) {
       return NextResponse.json({ error: 'Contractor not found' }, { status: 404 })
     }
 

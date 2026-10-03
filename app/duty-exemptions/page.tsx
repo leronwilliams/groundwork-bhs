@@ -1,5 +1,9 @@
 import Link from 'next/link'
 import { SolarCalculator } from '@/components/ui/SolarCalculator'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/duty-exemptions', 'Bahamas Duty Exemptions for Building Materials', 'How first-time homeowners and Family Island builders in The Bahamas can claim customs duty exemptions on construction materials.')
+
 
 const DUTY_RATES = [
   { material: 'Cement (94lb bag)', duty: '0%', vat: '10%', note: 'Essential material — duty-free', exempt: true },

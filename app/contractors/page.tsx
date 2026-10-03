@@ -5,12 +5,16 @@ import { SectionBadge } from '@/components/ui/SectionBadge'
 import { ContractorAvatar } from '@/components/ui/ContractorAvatar'
 import { CheckCircle, Lock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
+import { excludePlaceholders, isPlaceholderContractor } from '@/lib/contractors'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/contractors', 'Find Contractors in The Bahamas', 'Masons, electricians, plumbers, roofers and general contractors across Nassau and the Family Islands, with reviews from homeowners.')
 
 export const revalidate = 60
 
 export default async function ContractorsPage() {
   const contractors = await prisma.contractor.findMany({
-    where: { listingStatus: 'active' },
+    where: { listingStatus: 'active', ...excludePlaceholders() },
     orderBy: [{ featuredTier: 'asc' }, { name: 'asc' }],
   })
 
@@ -55,13 +59,13 @@ export default async function ContractorsPage() {
                       <div className="flex gap-2 flex-wrap mb-2">
                         <SectionBadge label={c.trade} />
                         <IslandTag island={c.island} />
-                        {c.verified ? (
+                        {c.verified && !isPlaceholderContractor(c.id) ? (
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm" style={{ background: 'rgba(5,150,105,0.2)', color: '#059669' }}>
                         <CheckCircle size={12} strokeWidth={2} /> Verified
                       </span>
                     ) : (
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm" style={{ background: 'rgba(245,166,35,0.12)', color: 'var(--amber)' }}>
-                        <AlertCircle size={12} strokeWidth={2} /> Pending verification
+                        <AlertCircle size={12} strokeWidth={2} /> {isPlaceholderContractor(c.id) ? 'Sample listing' : 'Pending verification'}
                       </span>
                     )}
                       </div>

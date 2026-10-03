@@ -82,8 +82,8 @@ export default function BecomeAContractorPage() {
           <p className="mb-8 text-sm" style={{ color: 'var(--text-secondary)' }}>
             Create a free account to list your business and start receiving matched project leads across the Bahamas.
           </p>
-          <a href="/sign-in" className="block py-3 rounded-sm font-bold text-sm mb-3" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
-          <a href="/sign-up" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>Create Free Account</a>
+          <a href="/sign-in?redirect_url=/become-a-contractor" className="block py-3 rounded-sm font-bold text-sm mb-3" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>Sign In</a>
+          <a href="/sign-up?redirect_url=/become-a-contractor" className="block py-3 rounded-sm font-bold text-sm" style={{ border: '1px solid var(--cyan-border)', color: 'var(--text-secondary)' }}>Create Free Account</a>
         </div>
       </div>
     )

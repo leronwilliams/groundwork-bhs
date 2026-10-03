@@ -1,6 +1,10 @@
 import Link from 'next/link'
 import { Anchor, Building2 } from 'lucide-react'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/permits', 'Building Permits in The Bahamas', 'How to get a building permit in The Bahamas: the Department of Physical Planning process, required documents, fees and timelines.')
+
 
 const PERMITS = [
   {

@@ -6,11 +6,20 @@ import { prisma } from '@/lib/db'
 import { SectionBadge } from '@/components/ui/SectionBadge'
 import { IslandTag } from '@/components/ui/IslandTag'
 import { BlueprintCard } from '@/components/ui/BlueprintCard'
+import type { Metadata } from 'next'
+import { pageMeta } from '@/lib/seo'
 
 export const revalidate = 60
 
 interface Params {
   params: Promise<{ slug: string }>
+}
+
+export async function generateMetadata({ params }: Params): Promise<Metadata> {
+  const { slug } = await params
+  const guide = await prisma.guide.findUnique({ where: { slug }, select: { title: true, excerpt: true } }).catch(() => null)
+  if (!guide) return { title: 'Guide not found', robots: { index: false } }
+  return pageMeta(`/guides/${slug}`, guide.title, guide.excerpt.slice(0, 200), { ogType: 'article' })
 }
 
 export default async function GuideDetailPage({ params }: Params) {

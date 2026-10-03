@@ -1,3 +1,7 @@
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/privacy', 'Privacy Policy', 'How Groundwork BHS collects, uses and protects your personal information.')
+
 export default function PrivacyPage() {
   return (
     <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: 'var(--navy)' }}>

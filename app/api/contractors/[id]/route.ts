@@ -6,6 +6,7 @@
 
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { isHiddenContractor, isPlaceholderContractor } from '@/lib/contractors'
 
 export async function GET(_req: Request, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -17,11 +18,12 @@ export async function GET(_req: Request, { params }: { params: Promise<{ id: str
       },
     })
 
-    if (!contractor || contractor.listingStatus !== 'active') {
+    if (!contractor || contractor.listingStatus !== 'active' || isHiddenContractor(contractor.id)) {
       return NextResponse.json({ error: 'Contractor not found' }, { status: 404 })
     }
 
-    return NextResponse.json(contractor)
+    const placeholder = isPlaceholderContractor(contractor.id)
+    return NextResponse.json({ ...contractor, verified: contractor.verified && !placeholder, isPlaceholder: placeholder })
   } catch (error) {
     console.error('Error fetching contractor:', error)
     return NextResponse.json({ error: 'Failed to fetch contractor' }, { status: 500 })

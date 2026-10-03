@@ -1,12 +1,10 @@
 import type { Metadata } from 'next'
+import { pageMeta } from '@/lib/seo'
 import Image from 'next/image'
 import Link from 'next/link'
 import { SITE_IMAGES } from '@/lib/site-images'
 
-export const metadata: Metadata = {
-  title: 'Photo Credits — Groundwork',
-  description: 'Credits and licences for the photographs used on Groundwork.',
-}
+export const metadata: Metadata = pageMeta('/credits', 'Photo Credits', 'Credits and licences for the photographs used on Groundwork.')
 
 const LICENSE_URLS: Record<string, string> = {
   'CC BY 2.0': 'https://creativecommons.org/licenses/by/2.0/',

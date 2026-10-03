@@ -51,7 +51,7 @@ export interface AggregateQuantity {
 export interface PlumbingQuantity {
   pvcPipe4inch: number       // linear feet of 10ft pieces
   cpvcPipeHalfInch: number   // linear feet of 10ft pieces
-  fittings: number           // sets
+  fittings: number           // sets (one per wet area)
   fixtures: number           // toilets, sinks, showers per bathroom
 }
 
@@ -123,22 +123,37 @@ export function calculateWallArea(
   return (perimeter * height) - doorArea - windowArea - slidingArea
 }
 
+// ─── CONCRETE (READY-MIX) ───────────────────────────────────────────────────
+/**
+ * Structural concrete is supplied ready-mix in New Providence (and batched on
+ * site on most Family Islands); it is priced per cubic yard, not as bags.
+ * - Floor slab: 4" thick over the ground-floor footprint, +5% waste
+ * - Strip footing: 24" wide × 12" deep under the external perimeter
+ * - Tie/bond beam: 8" × 12" over the perimeter, once per floor
+ * - Block cell fill: one filled cell every 4 ft (≈0.19 ft³ per ft of height)
+ * - Suspended floor slab(s) for multi-storey: 6" thick
+ */
+export function calculateConcreteYards(slabArea: number, perimeter: number, wallHeight: number, floors: number): number {
+  const slab = (slabArea * (4 / 12)) / 27
+  const footing = (perimeter * 2 * 1) / 27
+  const bondBeam = ((perimeter * (8 / 12) * 1) / 27) * floors
+  const cellFill = ((perimeter / 4) * wallHeight * floors * 0.19) / 27
+  const suspended = floors > 1 ? ((slabArea * (6 / 12)) / 27) * (floors - 1) : 0
+  return Math.ceil((slab + footing + bondBeam + cellFill + suspended) * 1.05)
+}
+
 // ─── CEMENT ──────────────────────────────────────────────────────────────────
 /**
- * Cement requirement for blocks + slab + foundation.
- * Block mortar: 1 bag per 25 blocks (standard 1:3 mix)
- * Slab: 1 bag per 3 sqft for 4" slab (1:2:4 mix)
- * Foundation stem wall: 2 bags per linear foot
+ * Bagged cement (94 lb) is only for site-mixed mortar and render, because
+ * slab/footing/beam concrete is ready-mix (see calculateConcreteYards).
+ * - Block mortar: 1 bag per 33 blocks (1:3 mix)
+ * - Render/plaster (Bahamian standard both faces): 1 bag per 70 sqft at ~1/2"
+ * - +10% waste
+ * (The previous formula also bagged the whole slab and footing, roughly
+ * doubling cement and double-counting concrete.)
  */
-export function calculateCementBags(
-  blocks: number,
-  slabArea: number,
-  foundationPerimeter: number
-): number {
-  const mortarCement = Math.ceil(blocks / 25)
-  const slabCement = Math.ceil(slabArea / 3)
-  const foundationCement = Math.ceil(foundationPerimeter * 2)
-  return mortarCement + slabCement + foundationCement
+export function calculateCementBags(totalBlocks: number, renderArea: number): number {
+  return Math.ceil((totalBlocks / 33 + renderArea / 70) * 1.1)
 }
 
 // ─── REBAR ────────────────────────────────────────────────────────────────────
@@ -165,30 +180,31 @@ export function calculateRebar(
 
 // ─── ROOFING ──────────────────────────────────────────────────────────────────
 /**
- * Roofing sheets (26g corrugated galvanise, 10ft length).
- * Sheet coverage: 7.5 sqft effective (overlap considered).
- * Waste factor: 8% for valley cuts and ridge details.
- * Pitch factors based on Bahamian design conventions.
+ * Roof area = footprint incl. 18" overhang all round × pitch factor
+ * (≈5/12–6/12 pitch: hip 1.15, gable 1.12, combination 1.15, flat 1.02).
+ * 26g corrugated galvanise 10 ft sheet: ~32" cover width, ≈25 sqft effective
+ * after end/side laps, +8% waste. (The previous 7.5 sqft/sheet coverage plus a
+ * 1.4 pitch factor gave roughly 3–4× too many sheets.)
+ * Screws: ~0.8 per sqft. Ridge/hip cap: ridge + hips.
  */
 export function calculateRoofing(floorArea: number, roofType: string, floors: number = 1): RoofingQuantity {
-  const pitchFactors: Record<string, number> = {
-    hip: 1.4,
-    gable: 1.25,
-    flat: 1.05,
-    combination: 1.3,
-  }
-  const pitchFactor = pitchFactors[roofType] || 1.3
+  const pitchFactors: Record<string, number> = { hip: 1.15, gable: 1.12, flat: 1.02, combination: 1.15 }
+  const pitchFactor = pitchFactors[roofType] || 1.15
   const footprint = floorArea / floors
-  const roofArea = footprint * pitchFactor
-  const sheetCoverage = 7.5
+  const length = Math.sqrt(footprint * 1.4)
+  const width = Math.sqrt(footprint / 1.4)
+  const overhang = 1.5
+  const roofArea = (length + 2 * overhang) * (width + 2 * overhang) * pitchFactor
+  const sheetCoverage = 25
   const wasteFactor = 1.08
   const sheets = Math.ceil((roofArea / sheetCoverage) * wasteFactor)
-  const ridgeCap = Math.ceil(Math.sqrt(footprint) * 1.2)
-  const screws = Math.ceil(roofArea * 2.5)
+  const hipLength = roofType === 'hip' || roofType === 'combination' ? 4 * (width / 2) * 1.5 : 0
+  const ridgeCap = Math.ceil(((length - (roofType === 'hip' ? width : 0)) + hipLength) * 1.1)
+  const screws = Math.ceil(roofArea * 0.8)
   return {
     roofingSheets: sheets,
     roofArea: Math.round(roofArea),
-    ridgeCap,
+    ridgeCap: Math.max(ridgeCap, Math.ceil(length)),
     screws,
     screwBoxes: Math.ceil(screws / 250),
   }
@@ -196,16 +212,15 @@ export function calculateRoofing(floorArea: number, roofType: string, floors: nu
 
 // ─── AGGREGATES ──────────────────────────────────────────────────────────────
 /**
- * Sand, gravel, and fill requirements.
- * Sand: block mortar + slab bedding
- * Gravel: slab aggregate
- * Fill: 6" compacted fill under slab (assumed)
+ * Sand: mortar/render sand, ~1 yd³ per 8 bags of cement (1:3 by volume).
+ * Gravel: 3" crushed base under the slab (ready-mix includes its own stone).
+ * Fill: 6" compacted fill under the slab.
  */
-export function calculateAggregates(slabArea: number, blocks: number): AggregateQuantity {
+export function calculateAggregates(slabArea: number, cementBags: number): AggregateQuantity {
   return {
-    sandYards: Math.ceil(blocks / 500) + Math.ceil(slabArea / 100),
-    gravelYards: Math.ceil(slabArea / 50),
-    fillYards: Math.ceil((slabArea / 27) * 0.5),
+    sandYards: Math.ceil(cementBags / 8),
+    gravelYards: Math.ceil((slabArea * 0.25) / 27),
+    fillYards: Math.ceil((slabArea * 0.5) / 27),
   }
 }
 
@@ -217,14 +232,14 @@ export function calculateAggregates(slabArea: number, blocks: number): Aggregate
  */
 // eslint-disable-next-line @typescript-eslint/no-unused-vars
 export function calculateLumber(roofArea: number, _roofType: string): { twoByFour: number; twoBy6: number; plywood: number } {
-  const rafterLength = 8  // average rafter length ft
   const rafterSpacing = 2 // ft on center
-  const linearFtOfRafters = (roofArea / rafterSpacing) * rafterLength
-  const pieces2x4 = Math.ceil(linearFtOfRafters / 8) // 8ft sticks
+  // Total rafter run = roof area / spacing (linear ft). Previously this was
+  // multiplied by an extra 8 ft rafter length, overstating lumber ~8×.
+  const rafterLf = (roofArea / rafterSpacing) * 1.1
   return {
-    twoByFour: Math.ceil(pieces2x4 * 0.6),   // smaller members
-    twoBy6: Math.ceil(pieces2x4 * 0.4),       // larger rafters
-    plywood: Math.ceil(roofArea / 32 * 1.08), // 4x8 sheets with 8% waste
+    twoBy6: Math.ceil(rafterLf / 8),               // 2×6 rafters, priced per 8 ft equivalent
+    twoByFour: Math.ceil((rafterLf * 0.35) / 8),   // fascia, blocking, collar ties
+    plywood: Math.ceil(roofArea / 32 * 1.08),      // 4×8 roof deck sheets, 8% waste
   }
 }
 
@@ -236,12 +251,14 @@ export function calculateLumber(roofArea: number, _roofType: string): { twoByFou
 export function calculatePlumbing(bathrooms: number, finishLevel: string): PlumbingQuantity {
   const pvcPipePerBath = 40     // linear feet 4" pipe (drains)
   const halfInchPerBath = 60    // linear feet CPVC supply
-  const fittingsPerBath = 25
+  // Fittings are priced per SET (one wet area's elbows, tees, valves, traps).
+  // Previously 25 individual fittings per bath were each charged as a full set.
+  const wetAreas = bathrooms + 2 // + kitchen and laundry
   const finishMultiplier = finishLevel === 'premium' ? 1.2 : finishLevel === 'luxury' ? 1.5 : 1.0
   return {
-    pvcPipe4inch: Math.ceil(bathrooms * pvcPipePerBath / 10),       // 10ft pieces
-    cpvcPipeHalfInch: Math.ceil(bathrooms * halfInchPerBath / 10),  // 10ft pieces
-    fittings: Math.ceil(bathrooms * fittingsPerBath * finishMultiplier),
+    pvcPipe4inch: Math.ceil((bathrooms * pvcPipePerBath + 60) / 10),       // drains + 60 ft main to septic, 10ft pieces
+    cpvcPipeHalfInch: Math.ceil((wetAreas * halfInchPerBath) / 10),      // supply, 10ft pieces
+    fittings: Math.ceil(wetAreas * finishMultiplier),
     fixtures: bathrooms,
   }
 }
@@ -350,34 +367,113 @@ export const FINISH_MULTIPLIERS: Record<string, number> = {
  * This is the formula baseline — AI output is cross-validated against this.
  */
 export function runFormulaEngine(dims: ProjectDimensions) {
-  const perimeter = estimatePerimeter(dims.totalFloorArea, dims.numberOfFloors)
-  const wallArea = calculateWallArea(
-    perimeter,
-    dims.wallHeight,
-    dims.numberOfDoors,
-    dims.numberOfWindows,
-    dims.numberOfSlidingDoors
-  )
-  const slabArea = dims.totalFloorArea / dims.numberOfFloors  // ground floor slab
+  const floors = Math.max(1, dims.numberOfFloors || 1)
+  const perimeter = estimatePerimeter(dims.totalFloorArea, floors)
+  const bedrooms = Math.max(0, dims.numberOfBedrooms || 0)
+  const bathrooms = Math.max(0, dims.numberOfBathrooms || 0)
+  const totalDoors = Math.max(0, dims.numberOfDoors || 0)
+  // Doors: the wizard asks for a total; at least 2 are exterior, and every
+  // bedroom/bathroom plus one closet/utility door needs an interior door.
+  const exteriorDoors = Math.min(Math.max(2, Math.ceil(totalDoors * 0.3)), Math.max(totalDoors, 2))
+  const interiorDoors = Math.max(totalDoors - exteriorDoors, bedrooms + bathrooms + 1)
+  const windows = Math.max(0, dims.numberOfWindows || 0)
+  const slidingDoors = Math.max(0, dims.numberOfSlidingDoors || 0)
 
-  const blocks = calculateBlocks(wallArea)
-  const cement = calculateCementBags(blocks, slabArea, perimeter)
-  const rebar = calculateRebar(perimeter, dims.wallHeight, slabArea)
-  const roofing = calculateRoofing(dims.totalFloorArea, dims.roofType, dims.numberOfFloors)
+  const extWallArea = Math.max(0, calculateWallArea(perimeter * floors, dims.wallHeight, exteriorDoors, windows, slidingDoors))
+  // Interior block partitions ≈ 60% of the external perimeter per floor, less interior door openings
+  const intWallArea = Math.max(0, perimeter * 0.6 * dims.wallHeight * floors - interiorDoors * 21)
+  const wallArea = extWallArea
+  const slabArea = dims.totalFloorArea / floors  // ground floor slab
+
+  const blocks = calculateBlocks(extWallArea)
+  const interiorBlocks = calculateBlocks(intWallArea)
+  const renderArea = extWallArea * 2 + intWallArea * 2
+  const cement = calculateCementBags(blocks + interiorBlocks, renderArea)
+  const concreteYards = calculateConcreteYards(slabArea, perimeter, dims.wallHeight, floors)
+  const rebar = calculateRebar(perimeter * floors, dims.wallHeight, slabArea)
+  const roofing = calculateRoofing(dims.totalFloorArea, dims.roofType, floors)
   const lumber = calculateLumber(roofing.roofArea, dims.roofType)
-  const aggregates = calculateAggregates(slabArea, blocks)
-  const plumbing = calculatePlumbing(dims.numberOfBathrooms, dims.finishLevel)
+  const aggregates = calculateAggregates(slabArea, cement)
+  const plumbing = calculatePlumbing(bathrooms, dims.finishLevel)
   const electrical = calculateElectrical(dims.totalFloorArea, dims.finishLevel)
   const ceilingArea = dims.totalFloorArea
-  const painting = calculatePainting(wallArea, ceilingArea)
-  const tiling = calculateTiling(dims.totalFloorArea, dims.numberOfBathrooms, dims.finishLevel)
+  const painting = calculatePainting(extWallArea + intWallArea * 2, ceilingArea)
+  const tiling = calculateTiling(dims.totalFloorArea, bathrooms, dims.finishLevel)
+
+  const metalRoof = !dims.roofMaterial || dims.roofMaterial === 'galvanize' || dims.roofMaterial === 'metal_standing_seam'
+  const rafters = Math.ceil(roofing.roofArea / 2 / 10) // ~10 ft average rafter
+
+  const quantities: Record<string, number> = {
+    // Foundation & structure
+    ready_mix_concrete: concreteYards + (dims.roofMaterial === 'concrete' ? Math.ceil((roofing.roofArea * 0.5) / 27) : 0),
+    concrete_block_8: blocks,
+    concrete_block_6: interiorBlocks,
+    cement_94lb: cement,
+    sand: aggregates.sandYards,
+    gravel: aggregates.gravelYards,
+    fill_sand: aggregates.fillYards,
+    rebar_4: rebar.fourBar,
+    tie_wire: rebar.tieWire,
+    // Roofing
+    ...(metalRoof ? {
+      roofing_sheet_26g: roofing.roofingSheets,
+      ridge_cap: roofing.ridgeCap,
+      roofing_screw: roofing.screwBoxes,
+    } : dims.roofMaterial === 'tile' ? {
+      roof_tile_square: Math.ceil((roofing.roofArea / 100) * 1.1),
+    } : {}),
+    ...(dims.roofMaterial === 'concrete' ? {} : {
+      roof_underlayment_square: Math.ceil((roofing.roofArea / 100) * 1.1),
+      fascia_soffit_lf: Math.ceil((2 * (Math.sqrt((dims.totalFloorArea / floors) * 1.4) + Math.sqrt((dims.totalFloorArea / floors) / 1.4)) + 12) * 1.05),
+      lumber_2x4x8: lumber.twoByFour,
+      lumber_2x6x8: lumber.twoBy6,
+      plywood_3_4: lumber.plywood,
+      hurricane_strap: rafters * 2,
+    }),
+    // Doors & windows
+    window_impact: windows,
+    door_exterior: exteriorDoors,
+    door_interior: interiorDoors,
+    sliding_door_impact: slidingDoors,
+    // Plumbing
+    pvc_pipe_4inch: plumbing.pvcPipe4inch,
+    cpvc_pipe_half: plumbing.cpvcPipeHalfInch,
+    plumbing_fittings_set: plumbing.fittings,
+    toilet: plumbing.fixtures,
+    sink_bathroom: plumbing.fixtures,
+    shower_unit: plumbing.fixtures,
+    kitchen_sink: 1,
+    water_heater: 1,
+    septic_system: 1,
+    // Electrical
+    wire_romex_14: electrical.wireRomex14,
+    electrical_outlet: electrical.outlets,
+    breaker_panel: electrical.breakerPanel,
+    electrical_rough_in: electrical.outlets + Math.ceil(dims.totalFloorArea / 100), // box, switch/cover, conduit & 12/2 per point
+    electrical_service: 1,
+    light_fixture: Math.ceil(dims.totalFloorArea / 100),
+    // Kitchen & finishes
+    kitchen_cabinets_lf: dims.totalFloorArea > 2000 ? 26 : 18,
+    ceiling_board: Math.ceil((ceilingArea / 32) * 1.1),
+    // Painting
+    exterior_paint_5gal: painting.exteriorPaint5Gal,
+    interior_paint_5gal: painting.interiorPaint5Gal,
+    primer_5gal: painting.primer5Gal,
+    // Tiling
+    floor_tile_sqft: tiling.floorTiles,
+    wall_tile_sqft: tiling.wallTiles,
+    tile_grout: tiling.grout,
+    tile_adhesive: tiling.adhesive,
+  }
 
   return {
     perimeter: Math.round(perimeter),
     wallArea: Math.round(wallArea),
     slabArea: Math.round(slabArea),
     blocks,
+    interiorBlocks,
     cement,
+    concreteYards,
     rebar,
     roofing,
     lumber,
@@ -386,5 +482,7 @@ export function runFormulaEngine(dims: ProjectDimensions) {
     electrical,
     painting,
     tiling,
+    openings: { exteriorDoors, interiorDoors, windows, slidingDoors },
+    quantities,
   }
 }

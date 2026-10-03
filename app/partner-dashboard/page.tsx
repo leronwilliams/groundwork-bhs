@@ -2,6 +2,10 @@ import { auth, currentUser } from '@clerk/nextjs/server'
 import { redirect } from 'next/navigation'
 import { prisma } from '@/lib/db'
 import Link from 'next/link'
+import { pageMeta } from '@/lib/seo'
+
+export const metadata = pageMeta('/partner-dashboard', 'Partner Dashboard', 'Groundwork partner dashboard.', { noindex: true })
+
 
 export default async function PartnerDashboardPage() {
   const { userId } = await auth()

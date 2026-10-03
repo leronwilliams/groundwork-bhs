@@ -11,10 +11,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { sendBOQQuoteRequests, BOQLineItem } from '@/lib/hardware-store'
+import { HARDWARE_QUOTES_ENABLED } from '@/lib/features'
 
 export const runtime = 'nodejs'
 
 export async function POST(req: NextRequest) {
+  // Disabled until real hardware-store emails exist (see lib/features.ts)
+  if (!HARDWARE_QUOTES_ENABLED) {
+    return NextResponse.json({ error: 'Hardware store quote requests are not available yet' }, { status: 503 })
+  }
   try {
     const { orderId, boqData, island } = await req.json()
 

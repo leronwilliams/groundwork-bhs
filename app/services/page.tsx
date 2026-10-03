@@ -2,6 +2,7 @@
 import { useState } from 'react'
 import { FileText, Calculator, Hammer, Scale, ArrowRight } from 'lucide-react'
 import Link from 'next/link'
+import { HARDWARE_QUOTES_ENABLED } from '@/lib/features'
 
 const CATEGORIES = [
   {
@@ -67,7 +68,7 @@ export default function ServicesPage() {
       {/* Header */}
       <div className="text-center px-6 mb-20">
         <div className="section-label mb-4">Services</div>
-        <h1 className="mb-6" style={{ fontSize: 'clamp(2.5rem, 5vw, 4rem)', fontWeight: 900, letterSpacing: '-0.03em' }}>
+        <h1 className="mb-6" style={{ fontSize: 'clamp(2rem, 8vw, 4rem)', fontWeight: 900, letterSpacing: '-0.03em' }}>
           Professional Services
         </h1>
         <p style={{ fontSize: '1.2rem', color: 'var(--text-secondary)', maxWidth: 500, margin: '0 auto' }}>
@@ -90,7 +91,7 @@ export default function ServicesPage() {
               <p className="mb-8 text-sm" style={{ color: 'var(--muted)', paddingLeft: '2.75rem' }}>{cat.desc}</p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                {cat.services.map(service => (
+                {cat.services.filter(s => HARDWARE_QUOTES_ENABLED || s.key !== 'boq_quotes').map(service => (
                   <div
                     key={service.key}
                     className="group relative flex flex-col rounded-sm overflow-hidden transition-all duration-300"
