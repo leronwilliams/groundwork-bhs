@@ -31,7 +31,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       ...(expiresAt ? { expiresAt } : {}),
     },
   })
-  await audit(adminId, `document.${updated.status}`, 'ContractorDocument', id, { reason: reason || undefined })
+  await audit(adminId, `document.${updated.status}`, 'ContractorDocument', id, { reason: reason || undefined, contractorId: updated.contractorId })
 
   const label = DOC_TYPES[doc.type as DocType]?.label || doc.type
   if (doc.contractor.email) {

@@ -18,6 +18,6 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   }
   await prisma.contractorDocument.delete({ where: { id } })
   try { await del(doc.blobPathname, { token: process.env.BLOB_READ_WRITE_TOKEN }) } catch (err) { console.error('[builders-circle] blob delete failed', err) }
-  await audit(userId, 'document.deleted', 'ContractorDocument', id, { type: doc.type })
+  await audit(userId, 'document.deleted', 'ContractorDocument', id, { type: doc.type, contractorId: doc.contractorId })
   return NextResponse.json({ ok: true })
 }

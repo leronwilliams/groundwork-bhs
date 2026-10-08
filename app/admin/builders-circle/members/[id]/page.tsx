@@ -18,7 +18,7 @@ export default async function AdminMember({ params, searchParams }: { params: Pr
   const c = m.contractor
   const reqs = requirementStatus(c.documents)
   const ready = requirementsMet(c.documents)
-  const log = await prisma.circleAuditLog.findMany({ where: { OR: [{ entityId: m.id }, { entityId: { in: c.documents.map(d => d.id) } }] }, orderBy: { createdAt: 'desc' }, take: 20 })
+  const log = await prisma.circleAuditLog.findMany({ where: { OR: [{ entityId: m.id }, { entityId: { in: c.documents.map(d => d.id) } }, { meta: { path: ['contractorId'], equals: c.id } }] }, orderBy: { createdAt: 'desc' }, take: 20 })
 
   return (
     <div className="max-w-5xl">

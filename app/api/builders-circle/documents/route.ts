@@ -46,7 +46,7 @@ export async function POST(req: NextRequest) {
   const doc = await prisma.contractorDocument.create({
     data: { contractorId: member.contractorId, type, blobPathname: pathname, fileName, mimeType: meta.contentType, size: meta.size, status: 'pending', expiresAt },
   })
-  await audit(userId, 'document.uploaded', 'ContractorDocument', doc.id, { type })
+  await audit(userId, 'document.uploaded', 'ContractorDocument', doc.id, { type, contractorId: member.contractorId })
 
   const origin = baseUrl(req)
   await sendCircleEmail({
