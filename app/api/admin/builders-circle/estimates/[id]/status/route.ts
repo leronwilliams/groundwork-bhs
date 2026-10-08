@@ -43,10 +43,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     prisma.circleJob.update({ where: { id: est.jobId }, data: { status: 'awarded', awardedEstimateId: id } }),
   ])
   await audit(adminId, 'job.awarded', 'CircleJob', est.jobId, { estimateId: id, declined: others.length })
-  await notify(est.contractor.email, `Job awarded to you: ${est.job.title}`, 'Congratulations — you won the job', 'Your estimate has been accepted. Groundwork BHS will contact you to arrange next steps.')
+  await notify(est.contractor.email, `Estimate accepted: ${est.job.title}`, 'Your estimate has been accepted', 'Groundwork BHS has accepted your estimate for this job. We will contact you to arrange next steps.')
   await Promise.allSettled(others.map(o => sendCircleEmail({
-    to: o.contractor.email || '', subject: `Estimate not selected: ${est.job.title}`, heading: 'Job awarded to another contractor',
-    body: para('Thank you for your estimate. This job has been awarded to another contractor.') + rows([['Job', est.job.title], ['Your estimate', formatBSD(o.amountCents)]]),
+    to: o.contractor.email || '', subject: `Estimate not selected: ${est.job.title}`, heading: 'Estimate not selected',
+    body: para('Thank you for your estimate. Another estimate was chosen for this job.') + rows([['Job', est.job.title], ['Your estimate', formatBSD(o.amountCents)]]),
     cta: { label: 'Open my estimates', url: `${origin}/builders-circle/estimates` },
   })))
   return done(req, back, { ok: true, status: 'accepted' })
