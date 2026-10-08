@@ -72,10 +72,10 @@ function queued<T>(fn: () => Promise<T>): Promise<T> {
 }
 
 type Payload = { from: string; to: string[]; replyTo: string; subject: string; html: string }
-/** Failed sends are recorded in the Builders Circle audit log so admins can see them. */
-async function recordFailure(payload: Payload, error: string) {
+/** Every send outcome is recorded in the Builders Circle audit log (no log access needed to check delivery). */
+async function recordOutcome(action: 'email.sent' | 'email.skipped' | 'email.failed', to: string[], subject: string, detail?: string) {
   try {
-    await prisma.circleAuditLog.create({ data: { actorUserId: 'system', action: 'email.failed', entityType: 'Email', entityId: payload.to.join(','), meta: { subject: payload.subject, error: error.slice(0, 300) } } })
+    await prisma.circleAuditLog.create({ data: { actorUserId: 'system', action, entityType: 'Email', entityId: to.join(',').slice(0, 300) || '(none)', meta: { subject: subject.slice(0, 300), ...(detail ? { detail: detail.slice(0, 300) } : {}) } } })
   } catch { /* logging only */ }
 }
 
@@ -96,11 +96,10 @@ async function sendWithRetry(payload: Payload): Promise<{ sent: boolean; skipped
     }
     await sleep(1000 * attempt)
   }
-  await recordFailure(payload, lastError)
-  return { sent: false, skipped: 'send failed' }
+  return { sent: false, skipped: `send failed: ${lastError}` }
 }
 
-export async function sendCircleEmail(opts: { to: string | string[]; subject: string; heading: string; body: string; cta?: { label: string; url: string } }): Promise<{ sent: boolean; skipped?: string }> {
+async function sendCircleEmailInner(opts: { to: string | string[]; subject: string; heading: string; body: string; cta?: { label: string; url: string } }): Promise<{ sent: boolean; skipped?: string }> {
   const intended = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean)
   if (!intended.length) return { sent: false, skipped: 'no recipient' }
   const redirect = (process.env.BUILDERS_CIRCLE_EMAIL_REDIRECT || '').trim()
@@ -117,4 +116,17 @@ export async function sendCircleEmail(opts: { to: string | string[]; subject: st
   const subject = redirect ? `[TEST → ${intended.join(', ')}] ${opts.subject}` : opts.subject
   const payload = { from: FROM, to, replyTo: process.env.BUILDERS_CIRCLE_REPLY_TO || 'jarvis@formartiq.com', subject, html: layout(opts.heading, opts.body, opts.cta) }
   return queued(() => sendWithRetry(payload))
+}
+
+export async function sendCircleEmail(opts: { to: string | string[]; subject: string; heading: string; body: string; cta?: { label: string; url: string } }): Promise<{ sent: boolean; skipped?: string }> {
+  const intended = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean)
+  let result: { sent: boolean; skipped?: string }
+  try {
+    result = await sendCircleEmailInner(opts)
+  } catch (err) {
+    result = { sent: false, skipped: `send failed: ${err instanceof Error ? err.message : String(err)}` }
+  }
+  const action = result.sent ? 'email.sent' : result.skipped?.startsWith('send failed') ? 'email.failed' : 'email.skipped'
+  await recordOutcome(action, intended, opts.subject, result.skipped)
+  return result
 }
