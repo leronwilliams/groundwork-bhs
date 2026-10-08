@@ -16,6 +16,7 @@
 import type Stripe from 'stripe'
 import { prisma } from '@/lib/db'
 import { stripe, PRICE_IDS, type PriceKey } from '@/lib/stripe'
+import { isAdmin as isAdminUser } from '@/lib/admin-auth'
 
 export const ESTIMATE_TYPES = ['estimate_single', 'estimate_full']
 export const BOQ_TYPES = ['boq', 'boq_hardware', 'boq_quotes']
@@ -70,7 +71,7 @@ export async function verifyPaidAccess(opts: {
     }
     const ownerClerk = order.user?.clerkId
     const isGuestOrder = !ownerClerk || ownerClerk === 'guest_checkout'
-    const isAdmin = !!clerkUserId && clerkUserId === process.env.ADMIN_CLERK_ID
+    const isAdmin = isAdminUser(clerkUserId)
     if (!isGuestOrder && !isAdmin && clerkUserId !== ownerClerk) {
       return deny(403, 'Please sign in with the account that placed this order.', 'NOT_ORDER_OWNER')
     }

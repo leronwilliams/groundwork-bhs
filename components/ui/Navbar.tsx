@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/contractors', label: 'Contractors' },
   { href: '/post-project', label: 'Post a Project' },
   { href: '/become-a-contractor', label: 'Become a Contractor' },
+  { href: '/builders-circle', label: 'Builders Circle' },
   { href: '/services', label: 'Services' },
   { href: '/advisor', label: 'Advisor' },
 ]
