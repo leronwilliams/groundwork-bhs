@@ -15,6 +15,13 @@ export default async function JobBoard({ searchParams }: { searchParams: Promise
   const trade = (CIRCLE_TRADES as readonly string[]).includes(sp.trade || '') ? sp.trade : undefined
   const area = (SETTLEMENTS as readonly string[]).includes(sp.area || '') ? sp.area : undefined
   const verified = member.status === 'verified'
+  if (member.status === 'suspended' || member.status === 'rejected') {
+    return (
+      <MemberShell active="/builders-circle/jobs" title="Job board" status={member.status}>
+        <Notice tone="error">The job board is not available while your membership is {member.status}. {member.statusReason ? `Reason: ${member.statusReason}. ` : ''}Please contact Groundwork BHS if you think this is a mistake.</Notice>
+      </MemberShell>
+    )
+  }
 
   // Summary fields only — description, attachments and client details are never loaded here.
   const jobs = await prisma.circleJob.findMany({

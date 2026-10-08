@@ -18,6 +18,13 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
   const { id } = await params
   const { member } = await requireMemberPage(`/builders-circle/jobs/${id}`)
   const verified = member.status === 'verified'
+  if (member.status === 'suspended' || member.status === 'rejected') {
+    return (
+      <MemberShell active="/builders-circle/jobs" title="Job board" status={member.status}>
+        <Notice tone="error">The job board is not available while your membership is {member.status}. {member.statusReason ? `Reason: ${member.statusReason}. ` : ''}Please contact Groundwork BHS if you think this is a mistake.</Notice>
+      </MemberShell>
+    )
+  }
 
   // Unverified members only ever get the summary columns from the database.
   const job = await prisma.circleJob.findUnique({ where: { id }, select: { id: true, title: true, summary: true, trades: true, settlement: true, budgetRange: true, bidDeadline: true, status: true, island: true } })
