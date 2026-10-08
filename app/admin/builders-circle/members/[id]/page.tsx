@@ -28,14 +28,14 @@ export default async function AdminMember({ params, searchParams }: { params: Pr
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div className="p-5 rounded-sm text-sm space-y-1" style={box}>
-          <p><span style={{ color: 'var(--muted)' }}>Contact:</span> {c.contactName} · {c.phone}{c.whatsapp ? ` · WhatsApp ${c.whatsapp}` : ''}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Email:</span> {c.email}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Address:</span> {m.businessAddress}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Trades:</span> {m.trades.join(', ')}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Areas:</span> {m.serviceAreas.join(', ')}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Years:</span> {m.yearsInBusiness ?? '—'} · <span style={{ color: 'var(--muted)' }}>Applied:</span> {fmtDate(m.appliedAt)}</p>
-          {c.website && <p><span style={{ color: 'var(--muted)' }}>Web:</span> {c.website}</p>}
-          {m.statusReason && <p><span style={{ color: 'var(--muted)' }}>Status note:</span> {m.statusReason}</p>}
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Contact:</span> {c.contactName} · {c.phone}{c.whatsapp ? ` · WhatsApp ${c.whatsapp}` : ''}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Email:</span> {c.email}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Address:</span> {m.businessAddress}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Trades:</span> {m.trades.join(', ')}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Areas:</span> {m.serviceAreas.join(', ')}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Years:</span> {m.yearsInBusiness ?? '—'} · <span style={{ color: 'var(--muted)' }}>Applied:</span> {fmtDate(m.appliedAt)}</p>
+          {c.website && <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Web:</span> {c.website}</p>}
+          {m.statusReason && <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Status note:</span> {m.statusReason}</p>}
         </div>
         <div className="p-5 rounded-sm" style={box}>
           <p className="text-xs uppercase mb-3" style={{ color: 'var(--muted)' }}>Required documents</p>
@@ -98,12 +98,12 @@ export default async function AdminMember({ params, searchParams }: { params: Pr
 
       {c.estimates.length > 0 && (<>
         <h2 className="mb-3" style={{ fontSize: '1.2rem' }}>Recent estimates</h2>
-        <div className="mb-8 text-sm space-y-1">{c.estimates.map(e => <p key={e.id}><Link href={`/admin/builders-circle/jobs/${e.jobId}`} style={{ color: 'var(--cyan)' }}>{e.job.title}</Link> — {formatBSD(e.amountCents)} <StatusPill status={e.status} /></p>)}</div>
+        <div className="mb-8 text-sm space-y-1">{c.estimates.map(e => <p key={e.id} className="text-sm"><Link href={`/admin/builders-circle/jobs/${e.jobId}`} style={{ color: 'var(--cyan)' }}>{e.job.title}</Link> — {formatBSD(e.amountCents)} <StatusPill status={e.status} /></p>)}</div>
       </>)}
 
       <h2 className="mb-3" style={{ fontSize: '1.2rem' }}>Audit trail</h2>
       <div className="text-xs space-y-1" style={{ color: 'var(--muted)' }}>
-        {log.map(l => <p key={l.id}>{l.createdAt.toLocaleString('en-US', { timeZone: 'America/Nassau', dateStyle: 'medium', timeStyle: 'short' })} ET · {l.action} · by {l.actorUserId.slice(0, 12)}…</p>)}
+        {log.map(l => <p key={l.id} className="text-xs">{l.createdAt.toLocaleString('en-US', { timeZone: 'America/Nassau', dateStyle: 'medium', timeStyle: 'short' })} ET · {l.action} · by {l.actorUserId.slice(0, 12)}…</p>)}
       </div>
     </div>
   )

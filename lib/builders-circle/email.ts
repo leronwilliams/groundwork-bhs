@@ -10,6 +10,7 @@
  *   signed-in session. Document links are additionally HMAC-signed and expire.
  */
 import { Resend } from 'resend'
+import { prisma } from '@/lib/db'
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null
 const FROM = process.env.BUILDERS_CIRCLE_EMAIL_FROM || 'Groundwork Builders Circle <circle@groundworksbhs.com>'
@@ -49,6 +50,56 @@ export function rows(pairs: [string, unknown][]): string {
 
 export const para = (text: string) => `<p style="font-size:14px;line-height:1.6">${escapeHtml(text)}</p>`
 
+/**
+ * Resend allows ~2 requests/second per account and reports failures in its
+ * return value (it does not throw). Sends are therefore serialised within an
+ * invocation, spaced out, checked, and retried on rate limits, so fan-out
+ * emails (job published, job awarded) are not silently dropped.
+ */
+const MIN_GAP_MS = 600
+let chain: Promise<unknown> = Promise.resolve()
+let lastSend = 0
+const sleep = (ms: number) => new Promise(r => setTimeout(r, ms))
+
+function queued<T>(fn: () => Promise<T>): Promise<T> {
+  const run = chain.then(async () => {
+    const wait = lastSend + MIN_GAP_MS - Date.now()
+    if (wait > 0) await sleep(wait)
+    try { return await fn() } finally { lastSend = Date.now() }
+  })
+  chain = run.catch(() => undefined)
+  return run
+}
+
+type Payload = { from: string; to: string[]; replyTo: string; subject: string; html: string }
+/** Failed sends are recorded in the Builders Circle audit log so admins can see them. */
+async function recordFailure(payload: Payload, error: string) {
+  try {
+    await prisma.circleAuditLog.create({ data: { actorUserId: 'system', action: 'email.failed', entityType: 'Email', entityId: payload.to.join(','), meta: { subject: payload.subject, error: error.slice(0, 300) } } })
+  } catch { /* logging only */ }
+}
+
+async function sendWithRetry(payload: Payload): Promise<{ sent: boolean; skipped?: string }> {
+  let lastError = 'unknown'
+  for (let attempt = 1; attempt <= 4; attempt++) {
+    try {
+      const { error } = await resend!.emails.send(payload)
+      if (!error) return { sent: true }
+      const rateLimited = /rate_limit/i.test(String((error as { name?: string }).name)) || (error as { statusCode?: number }).statusCode === 429
+      lastError = `${error.name}: ${error.message}`
+      console.error(`[builders-circle email] Resend error (attempt ${attempt}): ${lastError}`)
+      if (!rateLimited || attempt === 4) break
+    } catch (err) {
+      lastError = err instanceof Error ? err.message : String(err)
+      console.error(`[builders-circle email] send threw (attempt ${attempt})`, err)
+      if (attempt === 4) break
+    }
+    await sleep(1000 * attempt)
+  }
+  await recordFailure(payload, lastError)
+  return { sent: false, skipped: 'send failed' }
+}
+
 export async function sendCircleEmail(opts: { to: string | string[]; subject: string; heading: string; body: string; cta?: { label: string; url: string } }): Promise<{ sent: boolean; skipped?: string }> {
   const intended = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean)
   if (!intended.length) return { sent: false, skipped: 'no recipient' }
@@ -64,11 +115,6 @@ export async function sendCircleEmail(opts: { to: string | string[]; subject: st
   }
   const to = redirect ? [redirect] : intended
   const subject = redirect ? `[TEST → ${intended.join(', ')}] ${opts.subject}` : opts.subject
-  try {
-    await resend.emails.send({ from: FROM, to, replyTo: process.env.BUILDERS_CIRCLE_REPLY_TO || 'jarvis@formartiq.com', subject, html: layout(opts.heading, opts.body, opts.cta) })
-    return { sent: true }
-  } catch (err) {
-    console.error('[builders-circle email] send failed', err)
-    return { sent: false, skipped: 'send failed' }
-  }
+  const payload = { from: FROM, to, replyTo: process.env.BUILDERS_CIRCLE_REPLY_TO || 'jarvis@formartiq.com', subject, html: layout(opts.heading, opts.body, opts.cta) }
+  return queued(() => sendWithRetry(payload))
 }

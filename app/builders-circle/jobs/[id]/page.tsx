@@ -75,11 +75,11 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
           )}
         </div>
         <aside className="p-6 rounded-sm h-fit text-sm space-y-2" style={cardStyle}>
-          <p><span style={{ color: 'var(--muted)' }}>Island:</span> {job.island || CIRCLE_ISLAND}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Area:</span> {job.settlement || '—'}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Trades:</span> {job.trades.join(', ')}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Budget:</span> {job.budgetRange || 'To be discussed'}</p>
-          <p><span style={{ color: 'var(--muted)' }}>Estimates due:</span> {fmtDate(job.bidDeadline)}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Island:</span> {job.island || CIRCLE_ISLAND}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Area:</span> {job.settlement || '—'}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Trades:</span> {job.trades.join(', ')}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Budget:</span> {job.budgetRange || 'To be discussed'}</p>
+          <p className="text-sm"><span style={{ color: 'var(--muted)' }}>Estimates due:</span> {fmtDate(job.bidDeadline)}</p>
         </aside>
       </div>
     </MemberShell>

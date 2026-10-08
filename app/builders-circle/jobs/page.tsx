@@ -46,9 +46,9 @@ export default async function JobBoard({ searchParams }: { searchParams: Promise
               </div>
               <p className="text-sm mb-4" style={{ fontSize: '0.9rem' }}>{j.summary}</p>
               <div className="text-xs space-y-1 mb-4" style={{ color: 'var(--muted)', fontSize: '0.78rem' }}>
-                <p>Trades: {j.trades.join(', ')}</p>
-                <p>Area: {j.settlement || CIRCLE_ISLAND} · Budget: {j.budgetRange || 'To be discussed'}</p>
-                <p>Estimates due: {fmtDate(j.bidDeadline)}</p>
+                <p className="text-xs">Trades: {j.trades.join(', ')}</p>
+                <p className="text-xs">Area: {j.settlement || CIRCLE_ISLAND} · Budget: {j.budgetRange || 'To be discussed'}</p>
+                <p className="text-xs">Estimates due: {fmtDate(j.bidDeadline)}</p>
               </div>
               <div className="mt-auto">
                 <Link href={`/builders-circle/jobs/${j.id}`} className="text-sm font-bold" style={{ color: verified ? 'var(--cyan)' : 'var(--muted)' }}>
