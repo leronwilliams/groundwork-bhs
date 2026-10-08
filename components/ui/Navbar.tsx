@@ -49,12 +49,12 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-7">
+        <div className="hidden md:flex items-center gap-7 xl:gap-4">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className="text-sm font-medium transition-colors hover:text-white"
+              className="text-sm font-medium transition-colors hover:text-white xl:whitespace-nowrap"
               style={{ color: 'var(--text-secondary)', letterSpacing: '0.01em' }}
             >
               {label}
