@@ -199,6 +199,8 @@ body:has(.bc-theme),
   --bc-field-border: rgba(249,115,22,0.35);
   --bc-card-shadow: none;
   --pill-submitted: #fb923c;
+  --pill-bg-submitted: rgba(249,115,22,0.14);
+  --pill-border-submitted: rgba(249,115,22,0.45);
 }
 html:has(.bc-theme), body:has(.bc-theme) { background-color: #0b0b0b; }
 .bc-theme .bc-dark { background-color: #0b0b0b; color: var(--text-primary); }
@@ -236,6 +238,7 @@ body:has(.bc-theme) > footer { border-top: 3px solid #f97316 !important; }
   --bc-card-shadow: 0 1px 2px rgba(0,0,0,0.05), 0 4px 14px rgba(0,0,0,0.04);
   --pill-applied: #b45309; --pill-pending: #b45309; --pill-submitted: #c2410c; --pill-draft: #525252;
   --pill-verified: #047857; --pill-approved: #047857; --pill-open: #047857; --pill-accepted: #047857; --pill-awarded: #047857;
+  --pill-bg-submitted: #fff7ed; --pill-border-submitted: #fdba74;
   --pill-shortlisted: #4338ca; --pill-closed: #525252; --pill-withdrawn: #525252;
   --pill-rejected: #b91c1c; --pill-declined: #b91c1c; --pill-suspended: #b91c1c; --pill-expired: #b91c1c; --pill-cancelled: #b91c1c;
   background-color: #f7f7f7;

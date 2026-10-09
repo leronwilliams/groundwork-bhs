@@ -7,7 +7,7 @@ export const cardStyle = { background: 'var(--navy-surface)', border: '1px solid
 export function StatusPill({ status, label }: { status: string; label?: string }) {
   const color = STATUS_COLORS[status] || '#6b7a99'
   return (
-    <span className="inline-block text-xs px-2 py-0.5 rounded-sm font-bold uppercase tracking-wide" style={{ background: `${color}22`, color: `var(--pill-${status}, ${color})`, border: `1px solid ${color}55` }}>
+    <span className="inline-block whitespace-nowrap text-xs px-2 py-0.5 rounded-sm font-bold uppercase tracking-wide" style={{ background: `var(--pill-bg-${status}, ${color}22)`, color: `var(--pill-${status}, ${color})`, border: `1px solid var(--pill-border-${status}, ${color}55)` }}>
       {label || status}
     </span>
   )
