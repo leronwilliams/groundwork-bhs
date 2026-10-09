@@ -7,6 +7,7 @@ import { CheckCircle, Lock, AlertCircle } from 'lucide-react'
 import Link from 'next/link'
 import { excludePlaceholders, isPlaceholderContractor } from '@/lib/contractors'
 import { pageMeta } from '@/lib/seo'
+import { CircleBadge } from '@/components/builders-circle/ui'
 
 export const metadata = pageMeta('/contractors', 'Find Contractors in The Bahamas', 'Masons, electricians, plumbers, roofers and general contractors across Nassau and the Family Islands, with reviews from homeowners.')
 
@@ -17,6 +18,16 @@ export default async function ContractorsPage() {
     where: { listingStatus: 'active', ...excludePlaceholders() },
     orderBy: [{ featuredTier: 'asc' }, { name: 'asc' }],
   })
+
+  // Builders Circle verified members get a badge. Separate, fail-safe query so the
+  // directory keeps working even if the Builders Circle tables are unavailable.
+  let circleVerified = new Set<string>()
+  try {
+    const members = await prisma.circleMember.findMany({ where: { status: 'verified' }, select: { contractorId: true } })
+    circleVerified = new Set(members.map(m => m.contractorId))
+  } catch (err) {
+    console.error('[contractors] Builders Circle badge lookup failed:', err)
+  }
 
   const featured = contractors.filter(c => c.featuredTier)
   const regular = contractors.filter(c => !c.featuredTier)
@@ -59,6 +70,7 @@ export default async function ContractorsPage() {
                       <div className="flex gap-2 flex-wrap mb-2">
                         <SectionBadge label={c.trade} />
                         <IslandTag island={c.island} />
+                        {circleVerified.has(c.id) && <CircleBadge small />}
                         {c.verified && !isPlaceholderContractor(c.id) ? (
                       <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm" style={{ background: 'rgba(5,150,105,0.2)', color: '#059669' }}>
                         <CheckCircle size={12} strokeWidth={2} /> Verified
@@ -100,6 +112,7 @@ export default async function ContractorsPage() {
                     <div className="flex gap-2 flex-wrap mb-3">
                       <SectionBadge label={c.trade} />
                       <IslandTag island={c.island} />
+                      {circleVerified.has(c.id) && <CircleBadge small />}
                     </div>
                     {c.description && <p className="text-sm mb-3" style={{ color: 'var(--muted)' }}>{c.description}</p>}
                     <div className="flex gap-3 text-sm flex-wrap">

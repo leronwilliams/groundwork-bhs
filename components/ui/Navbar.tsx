@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/contractors', label: 'Contractors' },
   { href: '/post-project', label: 'Post a Project' },
   { href: '/become-a-contractor', label: 'Become a Contractor' },
+  { href: '/builders-circle', label: 'Builders Circle' },
   { href: '/services', label: 'Services' },
   { href: '/advisor', label: 'Advisor' },
 ]
@@ -38,7 +39,7 @@ export function Navbar() {
         WebkitBackdropFilter: scrolled ? 'blur(20px)' : 'none',
       }}
     >
-      <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-6 xl:px-4 h-16 flex items-center justify-between">
         {/* Wordmark */}
         <Link href="/" className="flex items-center gap-3 group">
           <LogoMark size={34} />
@@ -48,12 +49,12 @@ export function Navbar() {
         </Link>
 
         {/* Desktop Links */}
-        <div className="hidden md:flex items-center gap-7">
+        <div className="hidden md:flex items-center gap-7 xl:gap-3">
           {NAV_LINKS.map(({ href, label }) => (
             <Link
               key={href}
               href={href}
-              className="text-sm font-medium transition-colors hover:text-white"
+              className="text-sm font-medium transition-colors hover:text-white xl:whitespace-nowrap"
               style={{ color: 'var(--text-secondary)', letterSpacing: '0.01em' }}
             >
               {label}
@@ -62,7 +63,7 @@ export function Navbar() {
         </div>
 
         {/* Auth */}
-        <div className="hidden md:flex items-center gap-3">
+        <div className="hidden md:flex items-center gap-3 xl:whitespace-nowrap">
           {isSignedIn ? (
             <>
               <Link

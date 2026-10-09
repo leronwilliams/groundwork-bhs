@@ -6,6 +6,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { auth } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
+import { isAdmin } from '@/lib/admin-auth'
 
 const SERVICE_AMOUNTS: Record<string, number> = {
   estimate_single: 5000,
@@ -21,7 +22,7 @@ const SERVICE_AMOUNTS: Record<string, number> = {
 
 export async function POST(req: NextRequest) {
   const { userId } = await auth()
-  if (!userId || userId !== process.env.ADMIN_CLERK_ID) {
+  if (!userId || !isAdmin(userId)) {
     return NextResponse.json({ error: 'Admin only' }, { status: 403 })
   }
 
