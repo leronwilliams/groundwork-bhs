@@ -4,6 +4,7 @@ import { ShieldCheck, FileCheck2, ClipboardList, HandCoins, MapPin } from 'lucid
 import { prisma } from '@/lib/db'
 import { pageMeta } from '@/lib/seo'
 import { REQUIRED_GROUPS, SETTLEMENTS } from '@/lib/builders-circle/constants'
+import { BuildersCircleLogo } from '@/components/builders-circle/ui'
 
 export const metadata = pageMeta(
   '/builders-circle',
@@ -43,7 +44,8 @@ export default async function BuildersCircleLanding() {
     <div className="min-h-screen">
       {/* Hero band: black with orange accents */}
       <section className="bc-dark bc-hero pt-28 pb-16 px-6">
-        <div className="max-w-6xl mx-auto">
+        <div className="max-w-6xl mx-auto flex flex-col-reverse lg:flex-row lg:items-center gap-8 lg:gap-12">
+          <div className="flex-1 min-w-0">
           <div className="section-label mb-4" style={{ color: 'var(--amber)' }}>Grand Bahama · Contractor Network</div>
           <h1 className="font-black mb-6" style={{ color: 'var(--text-bright)', fontSize: 'clamp(2.5rem, 6vw, 4.5rem)' }}>Builders <span style={{ color: 'var(--cyan)' }}>Circle</span></h1>
           <p className="max-w-2xl mb-8 text-lg" style={{ color: 'var(--text-secondary)' }}>
@@ -71,6 +73,10 @@ export default async function BuildersCircleLanding() {
               </div>
             </div>
           )}
+          </div>
+          <div className="shrink-0 self-center lg:self-auto">
+            <BuildersCircleLogo size={360} priority className="w-44 sm:w-56 lg:w-[360px]" sizes="(min-width: 1024px) 360px, (min-width: 640px) 224px, 176px" />
+          </div>
         </div>
       </section>
 
@@ -111,6 +117,7 @@ export default async function BuildersCircleLanding() {
 
           {/* Closing call-to-action: black band */}
           <div className="bc-dark p-8 md:p-10 rounded-sm text-center" style={{ borderTop: '4px solid #f97316' }}>
+            <div className="flex justify-center mb-4"><BuildersCircleLogo size={96} className="w-20 md:w-24" sizes="96px" /></div>
             <h2 className="mb-3" style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)' }}>Founding members join free</h2>
             <p className="mb-6 max-w-xl mx-auto text-sm">Your documents are stored privately and are only seen by you and the Groundwork verification team. Estimates are sealed: only Groundwork sees your price.</p>
             <Link href={primary.href} className="btn-glow inline-block px-6 py-3 rounded-sm font-bold text-sm" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>{primary.label}</Link>

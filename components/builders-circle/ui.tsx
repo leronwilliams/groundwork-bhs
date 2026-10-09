@@ -1,4 +1,5 @@
 import Link from 'next/link'
+import Image from 'next/image'
 import { STATUS_COLORS } from '@/lib/builders-circle/constants'
 
 export const fieldStyle = { background: 'var(--navy-surface)', border: '1px solid var(--bc-field-border, var(--cyan-border))', color: 'var(--text-primary)' }
@@ -22,6 +23,20 @@ export function CircleBadge({ small = false }: { small?: boolean }) {
   )
 }
 
+/** Builders Circle logo. `onDark` uses the variant with white lettering for black bands. */
+export function BuildersCircleLogo({ size, onDark = true, priority = false, className = '', sizes }: { size: number; onDark?: boolean; priority?: boolean; className?: string; sizes?: string }) {
+  return (
+    <Image
+      src={onDark ? '/builders-circle/logo-dark-bg.png' : '/builders-circle/logo-light-bg.png'}
+      alt="Heroic Builders Circle logo"
+      width={size} height={size} priority={priority} quality={90}
+      sizes={sizes || `${size}px`}
+      className={className}
+      style={{ height: 'auto' }}
+    />
+  )
+}
+
 const TABS = [
   { href: '/builders-circle/dashboard', label: 'Dashboard' },
   { href: '/builders-circle/documents', label: 'Documents' },
@@ -35,11 +50,18 @@ export function MemberShell({ active, title, children, status }: { active: strin
     <div className="min-h-screen flex flex-col">
       <div className="bc-dark bc-hero pt-24 pb-6 px-6">
         <div className="max-w-5xl mx-auto">
-          <div className="flex items-center gap-3 flex-wrap mb-2">
-            <div className="section-label" style={{ color: 'var(--amber)' }}>Builders Circle · Grand Bahama</div>
-            {status && <StatusPill status={status} label={status === 'applied' ? 'Under review' : status} />}
+          <div className="flex items-center gap-4 md:gap-5 mb-6">
+            <Link href="/builders-circle" className="shrink-0" aria-label="Builders Circle home">
+              <BuildersCircleLogo size={88} priority className="w-14 md:w-[88px]" sizes="(min-width: 768px) 88px, 56px" />
+            </Link>
+            <div className="min-w-0">
+              <div className="flex items-center gap-3 flex-wrap mb-2">
+                <div className="section-label" style={{ color: 'var(--amber)' }}>Builders Circle · Grand Bahama</div>
+                {status && <StatusPill status={status} label={status === 'applied' ? 'Under review' : status} />}
+              </div>
+              <h1 className="text-3xl md:text-4xl font-black" style={{ color: 'var(--text-bright)', fontSize: 'clamp(1.6rem, 4vw, 2.5rem)' }}>{title}</h1>
+            </div>
           </div>
-          <h1 className="text-3xl md:text-4xl font-black mb-6" style={{ color: 'var(--text-bright)', fontSize: 'clamp(1.75rem, 4vw, 2.5rem)' }}>{title}</h1>
           <nav className="flex gap-2 flex-wrap">
             {TABS.map(t => (
               <Link key={t.href} href={t.href} className="px-3 py-1.5 rounded-sm text-xs font-bold" aria-current={active === t.href ? 'page' : undefined}
