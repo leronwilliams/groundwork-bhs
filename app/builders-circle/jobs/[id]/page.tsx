@@ -37,7 +37,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
 
   return (
     <MemberShell active="/builders-circle/jobs" title={job.title} status={member.status}>
-      <Link href="/builders-circle/jobs" className="text-xs font-bold" style={{ color: 'var(--cyan)' }}>← Back to job board</Link>
+      <Link href="/builders-circle/jobs" className="text-xs font-bold" style={{ color: 'var(--bc-link, var(--cyan))' }}>← Back to job board</Link>
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mt-4">
         <div className="lg:col-span-2 space-y-6">
           <div className="p-6 rounded-sm" style={cardStyle}>
@@ -52,7 +52,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
                   <div className="mt-4">
                     <h3 className="mb-2" style={{ fontSize: '1rem' }}>Drawings & files</h3>
                     <ul className="space-y-1">{attachments.map((a, i) => (
-                      <li key={i}><a href={`/api/builders-circle/jobs/${job.id}/attachments?i=${i}`} target="_blank" rel="noopener" className="text-sm inline-flex items-center gap-2" style={{ color: 'var(--cyan)' }}><Paperclip size={13} /> {a.fileName}</a></li>
+                      <li key={i}><a href={`/api/builders-circle/jobs/${job.id}/attachments?i=${i}`} target="_blank" rel="noopener" className="text-sm inline-flex items-center gap-2" style={{ color: 'var(--bc-link, var(--cyan))' }}><Paperclip size={13} /> {a.fileName}</a></li>
                     ))}</ul>
                   </div>
                 )}
@@ -60,7 +60,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
             ) : (
               <div className="p-4 rounded-sm" style={{ border: '1px dashed var(--amber)' }} data-testid="job-locked">
                 <p className="text-sm flex items-center gap-2" style={{ color: 'var(--amber)' }}><Lock size={14} /> Full scope, drawings and bidding are for verified members.</p>
-                <Link href="/builders-circle/documents" className="text-xs font-bold" style={{ color: 'var(--cyan)' }}>Finish verification →</Link>
+                <Link href="/builders-circle/documents" className="text-xs font-bold" style={{ color: 'var(--bc-link, var(--cyan))' }}>Finish verification →</Link>
               </div>
             )}
           </div>
@@ -77,7 +77,7 @@ export default async function JobPage({ params }: { params: Promise<{ id: string
               ) : (
                 <Notice tone="info">{job.status !== 'open' ? `This job is ${job.status}; estimates are closed.` : deadlinePassed ? 'The bid deadline has passed.' : 'This estimate has been decided.'}</Notice>
               )}
-              {mine?.attachmentPathname && <a href={`/api/builders-circle/estimates/${mine.id}/file`} target="_blank" rel="noopener" className="text-xs font-bold" style={{ color: 'var(--cyan)' }}>View my attachment</a>}
+              {mine?.attachmentPathname && <a href={`/api/builders-circle/estimates/${mine.id}/file`} target="_blank" rel="noopener" className="text-xs font-bold" style={{ color: 'var(--bc-link, var(--cyan))' }}>View my attachment</a>}
             </div>
           )}
         </div>

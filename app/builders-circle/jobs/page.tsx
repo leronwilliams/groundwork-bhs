@@ -58,7 +58,7 @@ export default async function JobBoard({ searchParams }: { searchParams: Promise
                 <p className="text-xs">Estimates due: {fmtDate(j.bidDeadline)}</p>
               </div>
               <div className="mt-auto">
-                <Link href={`/builders-circle/jobs/${j.id}`} className="text-sm font-bold" style={{ color: verified ? 'var(--cyan)' : 'var(--muted)' }}>
+                <Link href={`/builders-circle/jobs/${j.id}`} className="text-sm font-bold" style={{ color: verified ? 'var(--bc-link, var(--cyan))' : 'var(--muted)' }}>
                   {verified ? 'View details & submit estimate →' : 'View summary →'}
                 </Link>
               </div>

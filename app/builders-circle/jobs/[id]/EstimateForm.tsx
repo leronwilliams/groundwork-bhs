@@ -60,9 +60,9 @@ export function EstimateForm({ jobId, pathPrefix, existing }: { jobId: string; p
         <button type="submit" disabled={busy} className="px-6 py-2.5 rounded-sm font-bold text-sm inline-flex items-center gap-2" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>
           {busy && <Loader2 size={14} className="animate-spin" />} {live ? 'Update estimate' : existing ? 'Resubmit estimate' : 'Submit estimate'}
         </button>
-        {live && <button type="button" disabled={busy} onClick={withdraw} className="px-4 py-2.5 rounded-sm text-sm font-bold" style={{ border: '1px solid #ef4444', color: '#ef4444' }}>Withdraw</button>}
+        {live && <button type="button" disabled={busy} onClick={withdraw} className="px-4 py-2.5 rounded-sm text-sm font-bold" style={{ border: '1px solid var(--bc-error, #ef4444)', color: 'var(--bc-error, #ef4444)' }}>Withdraw</button>}
         <ProgressNote progress={progress} />
-        {msg && <span className="text-sm inline-flex items-center gap-2" style={{ color: msg.ok ? '#059669' : '#ef4444' }} data-testid="estimate-msg">{msg.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />} {msg.text}</span>}
+        {msg && <span className="text-sm inline-flex items-center gap-2" style={{ color: msg.ok ? 'var(--bc-ok, #059669)' : 'var(--bc-error, #ef4444)' }} data-testid="estimate-msg">{msg.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />} {msg.text}</span>}
       </div>
     </form>
   )

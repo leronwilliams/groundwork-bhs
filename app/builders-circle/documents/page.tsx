@@ -30,15 +30,15 @@ export default async function DocumentsPage({ searchParams }: { searchParams: Pr
         {docs.length === 0 ? <p className="p-6 text-sm">No documents uploaded yet.</p> : docs.map(d => {
           const st = effectiveDocStatus(d)
           return (
-            <div key={d.id} className="p-4 flex flex-wrap gap-4 items-center justify-between" style={{ borderBottom: '1px solid rgba(0,212,245,0.08)' }} data-doc-id={d.id}>
+            <div key={d.id} className="p-4 flex flex-wrap gap-4 items-center justify-between" style={{ borderBottom: '1px solid var(--bc-row, rgba(0,212,245,0.08))' }} data-doc-id={d.id}>
               <div className="min-w-0">
                 <p className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>{DOC_TYPES[d.type as DocType]?.label || d.type}</p>
                 <p className="text-xs" style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>{d.fileName} · uploaded {fmtDate(d.createdAt)} · expires {fmtDate(d.expiresAt)}</p>
-                {d.status === 'rejected' && d.rejectionReason && <p className="text-xs mt-1" style={{ color: '#ef4444', fontSize: '0.8rem' }}>Not accepted: {d.rejectionReason}</p>}
+                {d.status === 'rejected' && d.rejectionReason && <p className="text-xs mt-1" style={{ color: 'var(--bc-error, #ef4444)', fontSize: '0.8rem' }}>Not accepted: {d.rejectionReason}</p>}
               </div>
               <div className="flex items-center gap-3">
                 <StatusPill status={st} label={st === 'pending' ? 'Awaiting review' : st} />
-                <a href={`/api/builders-circle/documents/${d.id}/file`} target="_blank" rel="noopener" className="text-xs font-bold" style={{ color: 'var(--cyan)' }}>View</a>
+                <a href={`/api/builders-circle/documents/${d.id}/file`} target="_blank" rel="noopener" className="text-xs font-bold" style={{ color: 'var(--bc-link, var(--cyan))' }}>View</a>
                 {(d.status === 'pending' || d.status === 'rejected') && <DeleteDocButton id={d.id} />}
               </div>
             </div>

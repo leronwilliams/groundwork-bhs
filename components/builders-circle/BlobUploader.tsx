@@ -36,7 +36,7 @@ export function FilePicker({ onPick, disabled, label = 'Choose file' }: { onPick
       <input ref={ref} type="file" accept="application/pdf,image/jpeg,image/png" className="hidden" data-testid="file-input"
         onChange={e => { const f = e.target.files?.[0] || null; setName(f?.name || null); onPick(f) }} />
       <button type="button" disabled={disabled} onClick={() => ref.current?.click()} className="inline-flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-bold"
-        style={{ border: '1px solid var(--cyan-border)', color: 'var(--cyan)' }}>
+        style={{ border: '1px solid var(--cyan-border)', color: 'var(--bc-link, var(--cyan))' }}>
         <Upload size={14} /> {label}
       </button>
       <span className="text-xs" style={{ color: 'var(--muted)' }}>{name || 'PDF, JPG or PNG, up to 10 MB'}</span>
@@ -46,5 +46,5 @@ export function FilePicker({ onPick, disabled, label = 'Choose file' }: { onPick
 
 export function ProgressNote({ progress }: { progress: number | null }) {
   if (progress === null) return null
-  return <span className="inline-flex items-center gap-2 text-xs" style={{ color: 'var(--cyan)' }}><Loader2 size={12} className="animate-spin" /> Uploading {progress}%</span>
+  return <span className="inline-flex items-center gap-2 text-xs" style={{ color: 'var(--bc-link, var(--cyan))' }}><Loader2 size={12} className="animate-spin" /> Uploading {progress}%</span>
 }

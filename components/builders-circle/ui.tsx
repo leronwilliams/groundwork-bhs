@@ -1,13 +1,13 @@
 import Link from 'next/link'
 import { STATUS_COLORS } from '@/lib/builders-circle/constants'
 
-export const fieldStyle = { background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)', color: 'var(--text-primary)' }
-export const cardStyle = { background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }
+export const fieldStyle = { background: 'var(--navy-surface)', border: '1px solid var(--bc-field-border, var(--cyan-border))', color: 'var(--text-primary)' }
+export const cardStyle = { background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)', boxShadow: 'var(--bc-card-shadow, none)' }
 
 export function StatusPill({ status, label }: { status: string; label?: string }) {
   const color = STATUS_COLORS[status] || '#6b7a99'
   return (
-    <span className="inline-block text-xs px-2 py-0.5 rounded-sm font-bold uppercase tracking-wide" style={{ background: `${color}22`, color, border: `1px solid ${color}55` }}>
+    <span className="inline-block text-xs px-2 py-0.5 rounded-sm font-bold uppercase tracking-wide" style={{ background: `${color}22`, color: `var(--pill-${status}, ${color})`, border: `1px solid ${color}55` }}>
       {label || status}
     </span>
   )
@@ -32,22 +32,28 @@ const TABS = [
 
 export function MemberShell({ active, title, children, status }: { active: string; title: string; children: React.ReactNode; status?: string }) {
   return (
-    <div className="min-h-screen pt-24 pb-20 px-6" style={{ background: 'var(--navy)' }}>
-      <div className="max-w-5xl mx-auto">
-        <div className="flex items-center gap-3 flex-wrap mb-2">
-          <div className="section-label" style={{ color: 'var(--amber)' }}>Builders Circle · Grand Bahama</div>
-          {status && <StatusPill status={status} label={status === 'applied' ? 'Under review' : status} />}
+    <div className="min-h-screen flex flex-col">
+      <div className="bc-dark bc-hero pt-24 pb-6 px-6">
+        <div className="max-w-5xl mx-auto">
+          <div className="flex items-center gap-3 flex-wrap mb-2">
+            <div className="section-label" style={{ color: 'var(--amber)' }}>Builders Circle · Grand Bahama</div>
+            {status && <StatusPill status={status} label={status === 'applied' ? 'Under review' : status} />}
+          </div>
+          <h1 className="text-3xl md:text-4xl font-black mb-6" style={{ color: 'var(--text-bright)', fontSize: 'clamp(1.75rem, 4vw, 2.5rem)' }}>{title}</h1>
+          <nav className="flex gap-2 flex-wrap">
+            {TABS.map(t => (
+              <Link key={t.href} href={t.href} className="px-3 py-1.5 rounded-sm text-xs font-bold" aria-current={active === t.href ? 'page' : undefined}
+                style={{ background: active === t.href ? 'var(--cyan)' : 'var(--navy-surface)', color: active === t.href ? 'var(--navy)' : 'var(--text-secondary)', border: '1px solid var(--cyan-border)' }}>
+                {t.label}
+              </Link>
+            ))}
+          </nav>
         </div>
-        <h1 className="text-3xl md:text-4xl font-black mb-6" style={{ color: 'var(--text-primary)', fontSize: 'clamp(1.75rem, 4vw, 2.5rem)' }}>{title}</h1>
-        <nav className="flex gap-2 flex-wrap mb-8">
-          {TABS.map(t => (
-            <Link key={t.href} href={t.href} className="px-3 py-1.5 rounded-sm text-xs font-bold"
-              style={{ background: active === t.href ? 'var(--cyan)' : 'var(--navy-surface)', color: active === t.href ? 'var(--navy)' : 'var(--text-secondary)', border: '1px solid var(--cyan-border)' }}>
-              {t.label}
-            </Link>
-          ))}
-        </nav>
-        {children}
+      </div>
+      <div className="bc-light flex-1 pt-10 pb-20 px-6">
+        <div className="max-w-5xl mx-auto">
+          {children}
+        </div>
       </div>
     </div>
   )

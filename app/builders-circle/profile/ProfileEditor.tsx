@@ -23,7 +23,7 @@ export function ProfileEditor({ initial }: { initial: ProfileForm }) {
       <p className="text-xs" style={{ color: 'var(--muted)', fontSize: '0.75rem' }}>Business name is locked after applying because your documents are checked against it. Contact us to change it.</p>
       <div className="flex items-center gap-3">
         <button disabled={busy} className="px-6 py-2.5 rounded-sm font-bold text-sm inline-flex items-center gap-2" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>{busy && <Loader2 size={14} className="animate-spin" />} Save profile</button>
-        {msg && <span className="text-sm" style={{ color: msg.ok ? '#059669' : '#ef4444' }}>{msg.text}</span>}
+        {msg && <span className="text-sm" style={{ color: msg.ok ? 'var(--bc-ok, #059669)' : 'var(--bc-error, #ef4444)' }}>{msg.text}</span>}
       </div>
     </form>
   )

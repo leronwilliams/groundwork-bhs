@@ -30,7 +30,7 @@ export function JoinForm({ initial, hasListing }: { initial: ProfileForm; hasLis
         <input type="checkbox" checked={agree} onChange={e => setAgree(e.target.checked)} className="mt-1.5" name="agree" />
         <span>I confirm that I am authorised to act for this business, that the documents I upload are genuine, and that I agree to Groundwork BHS checking them with the issuing bodies.</span>
       </label>
-      {error && <p className="flex items-center gap-2 text-sm" style={{ color: '#ef4444' }}><AlertCircle size={14} /> {error}</p>}
+      {error && <p className="flex items-center gap-2 text-sm" style={{ color: 'var(--bc-error, #ef4444)' }}><AlertCircle size={14} /> {error}</p>}
       <button type="submit" disabled={busy} className="w-full md:w-auto px-8 py-3 rounded-sm font-bold text-sm inline-flex items-center justify-center gap-2" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>
         {busy && <Loader2 size={14} className="animate-spin" />} Continue to documents
       </button>

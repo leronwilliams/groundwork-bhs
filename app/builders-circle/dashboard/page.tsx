@@ -46,7 +46,7 @@ export default async function DashboardPage() {
         <div className="p-6 rounded-sm" style={cardStyle}>
           <div className="flex justify-between items-center mb-4">
             <h2 style={{ fontSize: '1.2rem' }}>Open jobs in your trades</h2>
-            <Link href="/builders-circle/jobs" className="text-xs font-bold" style={{ color: 'var(--cyan)' }}>All jobs →</Link>
+            <Link href="/builders-circle/jobs" className="text-xs font-bold" style={{ color: 'var(--bc-link, var(--cyan))' }}>All jobs →</Link>
           </div>
           {matching.length === 0 ? <p className="text-sm">No open jobs match your trades right now.</p> : (
             <ul className="space-y-3">
@@ -60,7 +60,7 @@ export default async function DashboardPage() {
         <div className="p-6 rounded-sm" style={cardStyle}>
           <div className="flex justify-between items-center mb-4">
             <h2 style={{ fontSize: '1.2rem' }}>My estimates</h2>
-            <Link href="/builders-circle/estimates" className="text-xs font-bold" style={{ color: 'var(--cyan)' }}>All →</Link>
+            <Link href="/builders-circle/estimates" className="text-xs font-bold" style={{ color: 'var(--bc-link, var(--cyan))' }}>All →</Link>
           </div>
           {estimates.length === 0 ? <p className="text-sm">{verified ? 'You have not submitted any estimates yet.' : 'You can submit estimates once verified.'}</p> : (
             <ul className="space-y-3">

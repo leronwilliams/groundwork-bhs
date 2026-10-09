@@ -64,7 +64,7 @@ export function DocumentUpload({ pathPrefix }: { pathPrefix: string }) {
           {busy && <Loader2 size={14} className="animate-spin" />} Upload securely
         </button>
         <ProgressNote progress={progress} />
-        {msg && <span className="text-sm inline-flex items-center gap-2" style={{ color: msg.ok ? '#059669' : '#ef4444' }} data-testid="upload-msg">{msg.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />} {msg.text}</span>}
+        {msg && <span className="text-sm inline-flex items-center gap-2" style={{ color: msg.ok ? 'var(--bc-ok, #059669)' : 'var(--bc-error, #ef4444)' }} data-testid="upload-msg">{msg.ok ? <CheckCircle size={14} /> : <AlertCircle size={14} />} {msg.text}</span>}
       </div>
     </form>
   )
@@ -74,7 +74,7 @@ export function DeleteDocButton({ id }: { id: string }) {
   const router = useRouter()
   const [busy, setBusy] = useState(false)
   return (
-    <button type="button" disabled={busy} className="text-xs font-bold" style={{ color: '#ef4444' }}
+    <button type="button" disabled={busy} className="text-xs font-bold" style={{ color: 'var(--bc-error, #ef4444)' }}
       onClick={async () => {
         if (!confirm('Remove this document?')) return
         setBusy(true)
