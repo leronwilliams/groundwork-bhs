@@ -99,6 +99,9 @@ model Contractor {
   listingStatus String               @default("active") // active | pending (self-signup awaiting admin approval)
   interests     ContractorInterest[]
   reviews       Review[]
+  circleMember  CircleMember?
+  documents     ContractorDocument[]
+  estimates     CircleEstimate[]
 }
 
 model Review {
@@ -304,4 +307,106 @@ model PexelsCache {
   resourceType String
   data         Json
   createdAt    DateTime @default(now())
+}
+
+// ── Builders Circle (Grand Bahama contractor portal) ─────────────────────────
+// Kept in separate tables (no new columns on Contractor) so existing Contractor
+// queries keep working even before this migration has been applied.
+
+model CircleMember {
+  id              String     @id @default(cuid())
+  contractorId    String     @unique
+  contractor      Contractor @relation(fields: [contractorId], references: [id])
+  userId          String     @unique // Clerk user id
+  status          String     @default("applied") // applied | verified | suspended | rejected
+  island          String     @default("Grand Bahama")
+  serviceAreas    String[]
+  trades          String[]
+  businessAddress String?
+  yearsInBusiness Int?
+  statusReason    String?
+  appliedAt       DateTime   @default(now())
+  verifiedAt      DateTime?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([status])
+}
+
+model ContractorDocument {
+  id              String     @id @default(cuid())
+  contractorId    String
+  contractor      Contractor @relation(fields: [contractorId], references: [id])
+  type            String // business_licence | gbpa_licence | nib_compliance | government_id | insurance | vat_cert | trade_cert | other
+  blobPathname    String     @unique
+  fileName        String
+  mimeType        String
+  size            Int
+  status          String     @default("pending") // pending | approved | rejected | expired
+  expiresAt       DateTime?
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  @@index([contractorId, status])
+}
+
+model CircleJob {
+  id                String           @id @default(cuid())
+  postedByUserId    String
+  posterType        String           @default("admin") // admin | client (Phase 2)
+  title             String
+  summary           String // shown to every member
+  description       String           @db.Text // verified members only
+  trades            String[]
+  island            String           @default("Grand Bahama")
+  settlement        String?
+  budgetRange       String?
+  siteVisit         Boolean          @default(false)
+  bidDeadline       DateTime?
+  targetStart       DateTime?
+  status            String           @default("draft") // draft | open | closed | awarded | cancelled
+  awardedEstimateId String?          @unique
+  attachments       Json? // [{ pathname, fileName, mimeType, size }]
+  clientContact     String? // admin-only, never shown to contractors
+  publishedAt       DateTime?
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  estimates         CircleEstimate[]
+
+  @@index([status, island])
+}
+
+model CircleEstimate {
+  id                 String     @id @default(cuid())
+  jobId              String
+  job                CircleJob  @relation(fields: [jobId], references: [id])
+  contractorId       String
+  contractor         Contractor @relation(fields: [contractorId], references: [id])
+  amountCents        Int // BSD
+  vatIncluded        Boolean    @default(false)
+  timelineDays       Int?
+  availableFrom      DateTime?
+  scopeNotes         String?    @db.Text
+  attachmentPathname String?
+  status             String     @default("submitted") // submitted | withdrawn | shortlisted | accepted | declined
+  createdAt          DateTime   @default(now())
+  updatedAt          DateTime   @updatedAt
+
+  @@unique([jobId, contractorId])
+  @@index([contractorId])
+}
+
+model CircleAuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String
+  action      String
+  entityType  String
+  entityId    String
+  meta        Json?
+  createdAt   DateTime @default(now())
+
+  @@index([entityType, entityId])
 }

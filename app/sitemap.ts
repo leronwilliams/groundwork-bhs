@@ -20,6 +20,7 @@ const STATIC_ROUTES: { path: string; priority: number; freq: MetadataRoute.Sitem
   { path: '/financing', priority: 0.7, freq: 'monthly' },
   { path: '/pricing', priority: 0.7, freq: 'monthly' },
   { path: '/become-a-contractor', priority: 0.6, freq: 'monthly' },
+  { path: '/builders-circle', priority: 0.6, freq: 'monthly' },
   { path: '/partners', priority: 0.6, freq: 'monthly' },
   { path: '/partners/join', priority: 0.4, freq: 'yearly' },
   { path: '/disclaimer', priority: 0.2, freq: 'yearly' },

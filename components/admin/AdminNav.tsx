@@ -3,6 +3,7 @@ import Link from 'next/link'
 const NAV_ITEMS = [
   { href: '/admin', label: 'Overview', icon: '📊' },
   { href: '/admin/contractors', label: 'Contractors', icon: '👷' },
+  { href: '/admin/builders-circle', label: 'Builders Circle', icon: '🏗️' },
   { href: '/admin/hardware-stores', label: 'Hardware Stores', icon: '🏪' },
   { href: '/admin/orders', label: 'Orders', icon: '📦' },
   { href: '/admin/users', label: 'Users', icon: '👤' },
