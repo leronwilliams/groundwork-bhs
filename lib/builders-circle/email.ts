@@ -22,7 +22,7 @@ export function escapeHtml(value: unknown): string {
 }
 
 export function adminEmails(): string[] {
-  return (process.env.BUILDERS_CIRCLE_ADMIN_EMAILS || 'leron@formartiq.com').split(/[\s,]+/).filter(Boolean)
+  return (process.env.BUILDERS_CIRCLE_ADMIN_EMAILS || 'ron@formartiq.com').split(/[\s,]+/).filter(Boolean)
 }
 
 /** Layout. `bodyHtml` must already be escaped / built from escaped parts. */

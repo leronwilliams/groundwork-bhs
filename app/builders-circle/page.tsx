@@ -59,14 +59,18 @@ export default async function BuildersCircleLanding() {
 
           {s && (
             <div className="flex gap-4 flex-wrap">
-              <div className="px-5 py-3 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
-                <div className="text-2xl font-black" style={{ color: 'var(--cyan)' }}>{s.verified}</div>
-                <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Verified members</div>
-              </div>
-              <div className="px-5 py-3 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
-                <div className="text-2xl font-black" style={{ color: 'var(--cyan)' }}>{s.openJobs}</div>
-                <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Open jobs</div>
-              </div>
+              {s.verified > 0 && (
+                <div className="px-5 py-3 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+                  <div className="text-2xl font-black" style={{ color: 'var(--cyan)' }}>{s.verified}</div>
+                  <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Verified members</div>
+                </div>
+              )}
+              {s.openJobs > 0 && (
+                <div className="px-5 py-3 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
+                  <div className="text-2xl font-black" style={{ color: 'var(--cyan)' }}>{s.openJobs}</div>
+                  <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Open jobs</div>
+                </div>
+              )}
               <div className="px-5 py-3 rounded-sm" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }}>
                 <div className="text-2xl font-black" style={{ color: '#ffffff' }}>Free</div>
                 <div className="text-xs uppercase tracking-wider" style={{ color: 'var(--muted)' }}>Founding membership</div>
