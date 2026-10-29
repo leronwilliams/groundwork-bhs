@@ -19,7 +19,7 @@ export function verifiedEmails(user: ClerkUserLike): string[] {
 
 export async function findInvite(emails: string[]) {
   if (!emails.length) return null
-  return prisma.circleMember.findFirst({
+  const candidates = await prisma.circleMember.findMany({
     where: {
       userId: { startsWith: INVITE_PREFIX },
       OR: emails.flatMap(e => [
@@ -29,4 +29,9 @@ export async function findInvite(emails: string[]) {
     },
     include: { contractor: true },
   })
+  // statusReason may list alternate emails; require a whole-token match (not a substring of a longer address).
+  return candidates.find(m =>
+    emails.includes((m.contractor.email || '').trim().toLowerCase()) ||
+    (m.statusReason || '').toLowerCase().split(/[\s|,;]+/).some(t => emails.includes(t)),
+  ) ?? null
 }
