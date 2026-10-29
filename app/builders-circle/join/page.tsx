@@ -3,6 +3,7 @@ import { currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import { pageMeta } from '@/lib/seo'
 import { getCircleContext } from '@/lib/builders-circle/server'
+import { findInvite, verifiedEmails } from '@/lib/builders-circle/invite'
 import { JoinForm } from './JoinForm'
 import { BuildersCircleLogo } from '@/components/builders-circle/ui'
 
@@ -14,6 +15,8 @@ export default async function JoinPage() {
   if (!ctx.userId) redirect('/sign-up?redirect_url=/builders-circle/join')
   if (ctx.member) redirect('/builders-circle/dashboard')
   const [user, listing] = await Promise.all([currentUser(), prisma.contractor.findUnique({ where: { userId: ctx.userId } })])
+  const invite = listing ? null : (await findInvite(verifiedEmails(user)))?.contractor ?? null
+  const pre = listing ?? invite
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -30,13 +33,13 @@ export default async function JoinPage() {
         <JoinForm
           hasListing={!!listing}
           initial={{
-            businessName: listing?.name || '',
-            contactName: listing?.contactName || user?.fullName || '',
-            email: listing?.email || user?.primaryEmailAddress?.emailAddress || '',
-            phone: listing?.phone || '',
-            whatsapp: listing?.whatsapp || '',
+            businessName: pre?.name || '',
+            contactName: pre?.contactName || user?.fullName || '',
+            email: pre?.email || user?.primaryEmailAddress?.emailAddress || '',
+            phone: pre?.phone || '',
+            whatsapp: pre?.whatsapp || '',
             trades: [], serviceAreas: [], businessAddress: '', yearsInBusiness: '',
-            description: listing?.description || '', website: listing?.website || '',
+            description: pre?.description || '', website: pre?.website || '',
           }}
         />
       </div>

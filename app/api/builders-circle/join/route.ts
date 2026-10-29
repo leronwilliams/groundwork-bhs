@@ -6,12 +6,13 @@
  * public directory until verified).
  */
 import { NextRequest, NextResponse } from 'next/server'
-import { auth } from '@clerk/nextjs/server'
+import { auth, currentUser } from '@clerk/nextjs/server'
 import { prisma } from '@/lib/db'
 import { rateLimit } from '@/lib/rate-limit'
 import { CIRCLE_ISLAND, CIRCLE_TRADES, SETTLEMENTS } from '@/lib/builders-circle/constants'
 import { audit, baseUrl, readBody, sameOrigin, str, strArr } from '@/lib/builders-circle/server'
 import { adminEmails, rows, para, sendCircleEmail } from '@/lib/builders-circle/email'
+import { findInvite, verifiedEmails } from '@/lib/builders-circle/invite'
 
 export const runtime = 'nodejs'
 
@@ -52,7 +53,22 @@ export async function POST(req: NextRequest) {
   if (already) return NextResponse.json({ error: 'You are already a Builders Circle member.', memberId: already.id }, { status: 409 })
 
   const existing = await prisma.contractor.findUnique({ where: { userId } })
-  const member = await prisma.$transaction(async tx => {
+  // Pre-registered contractor? Match on a verified sign-in email and claim that row.
+  const invite = existing ? null : await findInvite(verifiedEmails(await currentUser()))
+  const member = invite ? await prisma.$transaction(async tx => {
+    await tx.contractor.update({
+      where: { id: invite.contractorId },
+      data: { userId, name: businessName, contactName, email, phone, whatsapp: whatsapp || null, trade: trades[0], description: description || null, website: website || null },
+    })
+    return tx.circleMember.update({
+      where: { id: invite.id },
+      data: {
+        userId, status: 'applied', statusReason: null, serviceAreas, trades, businessAddress,
+        yearsInBusiness: Number.isFinite(yearsRaw) && yearsRaw >= 0 && yearsRaw < 150 ? yearsRaw : null,
+      },
+      include: { contractor: true },
+    })
+  }) : await prisma.$transaction(async tx => {
     const contractor = existing
       ? await tx.contractor.update({
           where: { id: existing.id },
@@ -80,7 +96,7 @@ export async function POST(req: NextRequest) {
     })
   })
 
-  await audit(userId, 'member.applied', 'CircleMember', member.id, { reusedListing: !!existing })
+  await audit(userId, invite ? 'member.claimed_invite' : 'member.applied', 'CircleMember', member.id, { reusedListing: !!existing })
   const origin = baseUrl(req)
   await sendCircleEmail({
     to: adminEmails(),
