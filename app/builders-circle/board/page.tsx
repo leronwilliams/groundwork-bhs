@@ -60,7 +60,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
         <div className="flex gap-2 flex-wrap items-center">
           <span className="text-xs font-mono mr-1" style={{ color: 'var(--muted)' }}>TYPE</span>
           <Pill active={!type} to={href(sp, { type: undefined })}>All</Pill>
-          {BOARD_TYPES.map(t => <Pill key={t} active={type === t} to={href(sp, { type: t })}>{TYPE_LABEL[t]}s</Pill>)}
+          {BOARD_TYPES.map(t => <Pill key={t} active={type === t} to={href(sp, { type: t })}>{t === 'news' ? 'News' : TYPE_LABEL[t] + 's'}</Pill>)}
         </div>
         <div className="flex gap-2 flex-wrap items-center">
           <span className="text-xs font-mono mr-1" style={{ color: 'var(--muted)' }}>WHERE</span>
@@ -103,14 +103,14 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
                   )}
                 </div>
                 <h2 className="mb-1" style={{ fontSize: '1.2rem', lineHeight: 1.3 }}>{p.title}</h2>
-                {p.source && <p className="text-xs mb-3 inline-flex items-center gap-1.5" style={{ color: 'var(--muted)' }}><Building2 size={12} /> {p.source}</p>}
+                {p.source && <p className="text-xs mb-1 flex items-center gap-1.5" style={{ color: 'var(--muted)' }}><Building2 size={12} /> {p.source}</p>}
                 {full ? (
                   <>
                     {p.summary && <p className="text-sm mb-4" style={{ fontSize: '0.92rem' }}>{p.summary}</p>}
                     {p.link && <a href={p.link} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-1.5 text-sm font-bold" style={{ color: '#ea580c' }}>{p.type === 'tender' ? 'View tender' : 'Read more'} <ExternalLink size={14} /></a>}
                   </>
                 ) : (
-                  <p className="text-xs inline-flex items-center gap-1.5" style={{ color: 'var(--muted)' }}><Lock size={12} /> Details and link are for members</p>
+                  <p className="text-xs flex items-center gap-1.5 mt-3" style={{ color: 'var(--muted)' }}><Lock size={12} /> Details and link are for members</p>
                 )}
               </article>
             )

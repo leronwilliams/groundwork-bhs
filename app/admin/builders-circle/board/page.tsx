@@ -30,7 +30,7 @@ export default async function AdminBoard({ searchParams }: { searchParams: Promi
         {tab(`All (${counts.draft + counts.published})`, '', !status && !type)}
         {tab(`Drafts (${counts.draft})`, '?status=draft', status === 'draft')}
         {tab(`Published (${counts.published})`, '?status=published', status === 'published')}
-        {BOARD_TYPES.map(t => tab(`${TYPE_LABEL[t]}s`, `?type=${t}`, type === t))}
+        {BOARD_TYPES.map(t => tab(t === 'news' ? 'News' : `${TYPE_LABEL[t]}s`, `?type=${t}`, type === t))}
       </div>
       <div className="rounded-sm overflow-hidden" style={{ border: '1px solid var(--cyan-border)' }} data-testid="admin-board-list">
         {posts.length === 0 ? <p className="p-6 text-sm" style={{ color: 'var(--muted)' }}>No posts yet. Import tenders or create one.</p> : posts.map((p, i) => (
