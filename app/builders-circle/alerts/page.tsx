@@ -26,7 +26,7 @@ export default async function AlertsPage() {
     <div className="space-y-8 max-w-3xl">
       <div className="p-6 rounded-sm" style={cardStyle}>
         <h2 className="mb-2" style={{ fontSize: '1.3rem' }}>Get an alert when a new job is posted</h2>
-        <p className="text-sm mb-5">When a new Grand Bahama tender, job or news item goes on the board, we can send an alert straight to your phone. You only get alerts for Grand Bahama, and only once your business is verified. You can turn it off any time.</p>
+        <p className="text-sm mb-5">When a new Grand Bahama tender, job or news item goes on the board, we can send an alert straight to your phone. You only get alerts for the areas you serve (Grand Bahama, and Nassau if you list it), and only once your business is verified. You can turn it off any time.</p>
         <JobAlerts publicKey={vapidPublicKey()} signedIn={!!ctx.userId} canSubscribe={canSubscribe} />
         {member && member.status !== 'verified' && <p className="text-xs mt-4" style={{ color: 'var(--muted)' }}>Your membership is not verified yet. You can turn alerts on now; they start once we verify your business.</p>}
       </div>
