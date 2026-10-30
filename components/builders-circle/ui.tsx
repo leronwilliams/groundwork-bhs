@@ -41,6 +41,7 @@ const TABS = [
   { href: '/builders-circle/dashboard', label: 'Dashboard' },
   { href: '/builders-circle/documents', label: 'Documents' },
   { href: '/builders-circle/jobs', label: 'Job Board' },
+  { href: '/builders-circle/board', label: 'News & Tenders' },
   { href: '/builders-circle/estimates', label: 'My Estimates' },
   { href: '/builders-circle/profile', label: 'Profile' },
 ]

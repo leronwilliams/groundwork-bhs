@@ -410,3 +410,29 @@ model CircleAuditLog {
 
   @@index([entityType, entityId])
 }
+
+// Builders Circle jobs & news board (tenders, jobs, news). Posts are created as drafts and published by an admin.
+model BoardPost {
+  id           String    @id @default(cuid())
+  type         String // tender | job | news
+  title        String
+  summary      String    @default("")
+  source       String? // agency or source name
+  location     String    @default("Grand Bahama") // Grand Bahama | Nassau | Other
+  closeDate    DateTime?
+  link         String?
+  sourceId     String?   @unique // e.g. bonfire:260687 (importer dedupe)
+  status       String    @default("draft") // draft | published
+  publishedAt  DateTime?
+  digestSentAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status, publishedAt])
+}
+
+// Members who opted out of the board email digest (keyed by CircleMember.id; no FK so it never blocks member changes).
+model BoardDigestOptOut {
+  memberId  String   @id
+  createdAt DateTime @default(now())
+}
