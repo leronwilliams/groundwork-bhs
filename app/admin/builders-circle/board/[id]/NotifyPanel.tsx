@@ -23,9 +23,9 @@ export function NotifyPanel({ postId, location, devices, members, myDevices, pus
     <div className="mt-10 p-5 rounded-sm space-y-4" style={{ background: 'var(--navy-surface)', border: '1px solid var(--cyan-border)' }} data-testid="notify-panel">
       <h2 className="font-bold" style={{ color: 'var(--text-primary)', fontSize: '1.1rem' }}>Notify members (phone alert)</h2>
       <p className="text-xs" style={{ color: 'var(--muted)' }}>
-        {location === 'Grand Bahama'
-          ? <>Goes to <strong>{devices}</strong> device(s) of <strong>{members}</strong> approved Grand Bahama member(s) who turned on job alerts.</>
-          : <>Alerts only go out for Grand Bahama posts. This post is tagged {location}, so there is nobody to notify.</>}
+        {location === 'Grand Bahama' || location === 'Nassau'
+          ? <>Goes to <strong>{devices}</strong> device(s) of <strong>{members}</strong> approved member(s) with {location === 'Nassau' ? 'a Nassau / New Providence' : 'a Grand Bahama'} service area who turned on job alerts.</>
+          : <>Alerts only go out for Grand Bahama and Nassau posts. This post is tagged {location}, so there is nobody to notify.</>}
         {pushedAt && <> Already pushed {new Date(pushedAt).toLocaleString('en-US', { timeZone: 'America/New_York', dateStyle: 'medium', timeStyle: 'short' })} ET.</>}
       </p>
       <div>

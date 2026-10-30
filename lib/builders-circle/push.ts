@@ -53,15 +53,23 @@ export async function sendPush(subs: Sub[], payload: PushPayload) {
   return { sent, removed, failed }
 }
 
-/** Devices of approved (verified) members who should hear about a post at this location. */
+const NASSAU_AREA = /nassau|new providence/i
+
+/** Devices of approved (verified) members who should hear about a post at this location.
+ *  Grand Bahama posts -> Grand Bahama members with a service area.
+ *  Nassau posts -> verified members whose service areas include Nassau / New Providence.
+ *  Other locations -> nobody. */
 export async function pushRecipients(location: string) {
-  if (location !== 'Grand Bahama') return []
-  const members = await prisma.circleMember.findMany({
-    where: { status: 'verified', island: 'Grand Bahama', NOT: { serviceAreas: { isEmpty: true } } },
-    select: { id: true },
-  })
-  if (!members.length) return []
-  return prisma.pushSubscription.findMany({ where: { memberId: { in: members.map(m => m.id) } } })
+  let ids: string[] = []
+  if (location === 'Grand Bahama') {
+    const members = await prisma.circleMember.findMany({ where: { status: 'verified', island: 'Grand Bahama', NOT: { serviceAreas: { isEmpty: true } } }, select: { id: true } })
+    ids = members.map(m => m.id)
+  } else if (location === 'Nassau') {
+    const members = await prisma.circleMember.findMany({ where: { status: 'verified', NOT: { serviceAreas: { isEmpty: true } } }, select: { id: true, serviceAreas: true } })
+    ids = members.filter(m => m.serviceAreas.some(a => NASSAU_AREA.test(a))).map(m => m.id)
+  }
+  if (!ids.length) return []
+  return prisma.pushSubscription.findMany({ where: { memberId: { in: ids } } })
 }
 
 /** Preview/test deployments may only send when pointed at the isolated test DB (marked by the email redirect var). */
