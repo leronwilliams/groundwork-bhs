@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { pageMeta } from '@/lib/seo'
 import { REQUIRED_GROUPS, SETTLEMENTS } from '@/lib/builders-circle/constants'
 import { BuildersCircleLogo } from '@/components/builders-circle/ui'
+import { TYPE_COLOR, TYPE_LABEL, closesIn } from '@/lib/builders-circle/board-constants'
 
 export const metadata = pageMeta(
   '/builders-circle',
@@ -25,8 +26,18 @@ async function stats() {
   }
 }
 
+async function latestPosts() {
+  try {
+    return await prisma.boardPost.findMany({
+      where: { status: 'published', OR: [{ closeDate: null }, { closeDate: { gt: new Date() } }] },
+      orderBy: { publishedAt: 'desc' }, take: 3,
+      select: { id: true, type: true, title: true, source: true, location: true, closeDate: true },
+    })
+  } catch { return [] }
+}
+
 export default async function BuildersCircleLanding() {
-  const [{ userId }, s] = await Promise.all([auth(), stats()])
+  const [{ userId }, s, board] = await Promise.all([auth(), stats(), latestPosts()])
   let isMember = false
   if (userId) {
     try { isMember = !!(await prisma.circleMember.findUnique({ where: { userId }, select: { id: true } })) } catch { /* table not ready */ }
@@ -100,6 +111,27 @@ export default async function BuildersCircleLanding() {
               </div>
             ))}
           </div>
+
+          {board.length > 0 && (
+            <div className="mb-16" data-testid="board-teaser">
+              <div className="flex items-end justify-between gap-4 mb-5 flex-wrap">
+                <h2 style={{ fontSize: 'clamp(1.4rem, 2.6vw, 2rem)' }}>Latest on the board</h2>
+                <Link href="/builders-circle/board" className="text-sm font-bold" style={{ color: '#ea580c' }}>Jobs, tenders &amp; news →</Link>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                {board.map(p => (
+                  <Link key={p.id} href="/builders-circle/board" className="p-5 rounded-sm block" style={{ background: '#ffffff', border: '1px solid var(--cyan-border)', borderLeft: `4px solid ${TYPE_COLOR[p.type] || '#374151'}`, boxShadow: 'var(--bc-card-shadow)' }}>
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm" style={{ background: TYPE_COLOR[p.type] || '#374151', color: '#fff' }}>{TYPE_LABEL[p.type] || p.type}</span>
+                      <span className="text-xs font-mono" style={{ color: 'var(--muted)' }}>{p.location}</span>
+                    </div>
+                    <h3 style={{ fontSize: '1rem', lineHeight: 1.35 }}>{p.title}</h3>
+                    <p className="text-xs mt-2" style={{ color: 'var(--muted)' }}>{[p.source, closesIn(p.closeDate)].filter(Boolean).join(' · ')}</p>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-16">
             <div className="p-6 rounded-sm" style={{ background: '#ffffff', border: '1px solid var(--cyan-border)', boxShadow: 'var(--bc-card-shadow)' }}>

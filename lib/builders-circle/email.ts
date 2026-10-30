@@ -26,7 +26,7 @@ export function adminEmails(): string[] {
 }
 
 /** Layout. `bodyHtml` must already be escaped / built from escaped parts. */
-function layout(heading: string, bodyHtml: string, cta?: { label: string; url: string }): string {
+function layout(heading: string, bodyHtml: string, cta?: { label: string; url: string }, footerHtml?: string): string {
   return `<!DOCTYPE html><html><head><meta charset="utf-8"></head>
 <body style="font-family:Arial,sans-serif;max-width:620px;margin:0 auto;padding:20px;color:#1f2937">
   <div style="background:#060d1a;padding:24px;border-radius:4px;margin-bottom:24px">
@@ -37,6 +37,7 @@ function layout(heading: string, bodyHtml: string, cta?: { label: string; url: s
   ${bodyHtml}
   ${cta ? `<div style="text-align:center;margin:28px 0"><a href="${escapeHtml(cta.url)}" style="background:#00d4f5;color:#060d1a;padding:14px 28px;border-radius:4px;font-weight:bold;font-size:15px;text-decoration:none;display:inline-block">${escapeHtml(cta.label)}</a></div>` : ''}
   <p style="font-size:12px;color:#9ca3af;margin-top:32px">You are receiving this because of your Builders Circle account on Groundwork BHS. Links open the portal and ask you to sign in.</p>
+  ${footerHtml || ''}
 </body></html>`
 }
 
@@ -71,7 +72,13 @@ function queued<T>(fn: () => Promise<T>): Promise<T> {
   return run
 }
 
-type Payload = { from: string; to: string[]; replyTo: string; subject: string; html: string }
+type Payload = { from: string; to: string[]; replyTo: string; subject: string; html: string; headers?: Record<string, string> }
+type SendOpts = { to: string | string[]; subject: string; heading: string; body: string; cta?: { label: string; url: string }; footerHtml?: string; headers?: Record<string, string> }
+
+/** Full HTML of a Builders Circle email, for admin previews. */
+export function renderCircleEmail(opts: Pick<SendOpts, 'heading' | 'body' | 'cta' | 'footerHtml'>): string {
+  return layout(opts.heading, opts.body, opts.cta, opts.footerHtml)
+}
 /** Every send outcome is recorded in the Builders Circle audit log (no log access needed to check delivery). */
 async function recordOutcome(action: 'email.sent' | 'email.skipped' | 'email.failed', to: string[], subject: string, detail?: string) {
   try {
@@ -99,7 +106,7 @@ async function sendWithRetry(payload: Payload): Promise<{ sent: boolean; skipped
   return { sent: false, skipped: `send failed: ${lastError}` }
 }
 
-async function sendCircleEmailInner(opts: { to: string | string[]; subject: string; heading: string; body: string; cta?: { label: string; url: string } }): Promise<{ sent: boolean; skipped?: string }> {
+async function sendCircleEmailInner(opts: SendOpts): Promise<{ sent: boolean; skipped?: string }> {
   const intended = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean)
   if (!intended.length) return { sent: false, skipped: 'no recipient' }
   const redirect = (process.env.BUILDERS_CIRCLE_EMAIL_REDIRECT || '').trim()
@@ -114,11 +121,11 @@ async function sendCircleEmailInner(opts: { to: string | string[]; subject: stri
   }
   const to = redirect ? [redirect] : intended
   const subject = redirect ? `[TEST → ${intended.join(', ')}] ${opts.subject}` : opts.subject
-  const payload = { from: FROM, to, replyTo: process.env.BUILDERS_CIRCLE_REPLY_TO || 'jarvis@formartiq.com', subject, html: layout(opts.heading, opts.body, opts.cta) }
+  const payload = { from: FROM, to, replyTo: process.env.BUILDERS_CIRCLE_REPLY_TO || 'jarvis@formartiq.com', subject, html: layout(opts.heading, opts.body, opts.cta, opts.footerHtml), ...(opts.headers ? { headers: opts.headers } : {}) }
   return queued(() => sendWithRetry(payload))
 }
 
-export async function sendCircleEmail(opts: { to: string | string[]; subject: string; heading: string; body: string; cta?: { label: string; url: string } }): Promise<{ sent: boolean; skipped?: string }> {
+export async function sendCircleEmail(opts: SendOpts): Promise<{ sent: boolean; skipped?: string }> {
   const intended = (Array.isArray(opts.to) ? opts.to : [opts.to]).filter(Boolean)
   let result: { sent: boolean; skipped?: string }
   try {

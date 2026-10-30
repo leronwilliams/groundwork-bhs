@@ -35,6 +35,7 @@ export default async function AdminCircleOverview() {
       <div className="flex gap-3">
         <Link href="/admin/builders-circle/members" className="px-4 py-2 rounded-sm text-sm font-bold" style={{ border: '1px solid var(--cyan-border)', color: 'var(--cyan)' }}>Members</Link>
         <Link href="/admin/builders-circle/jobs" className="px-4 py-2 rounded-sm text-sm font-bold" style={{ border: '1px solid var(--cyan-border)', color: 'var(--cyan)' }}>Jobs</Link>
+        <Link href="/admin/builders-circle/board" className="px-4 py-2 rounded-sm text-sm font-bold" style={{ border: '1px solid var(--cyan-border)', color: 'var(--cyan)' }}>Jobs &amp; news board</Link>
         <Link href="/admin/builders-circle/jobs/new" className="px-4 py-2 rounded-sm text-sm font-bold" style={{ background: 'var(--cyan)', color: 'var(--navy)' }}>+ Post a job</Link>
       </div>
     </div>
