@@ -37,7 +37,7 @@ export default async function AdminBoard({ searchParams }: { searchParams: Promi
           <Link key={p.id} href={`/admin/builders-circle/board/${p.id}`} className="grid gap-3 items-center px-4 py-3" style={{ gridTemplateColumns: '3fr 1fr 1fr 1fr', background: i % 2 ? 'var(--navy-card)' : 'var(--navy-surface)' }}>
             <div><p className="text-sm font-bold" style={{ color: 'var(--text-primary)' }}>{p.title}</p><p className="text-xs" style={{ color: 'var(--muted)' }}>{TYPE_LABEL[p.type] || p.type} · {p.source || '—'} · {p.location}</p></div>
             <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{p.closeDate ? `Closes ${fmtClose(p.closeDate)}` : 'No close date'}</p>
-            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{p.digestSentAt ? 'In a digest' : p.status === 'published' ? 'Not emailed yet' : ''}</p>
+            <p className="text-xs" style={{ color: 'var(--text-secondary)' }}>{p.status === 'published' ? [p.digestSentAt ? 'Emailed' : 'Not emailed', p.pushSentAt ? 'pushed' : 'not pushed'].join(' · ') : ''}</p>
             <StatusPill status={p.status === 'published' ? 'open' : 'draft'} label={p.status} />
           </Link>
         ))}
