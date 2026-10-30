@@ -42,6 +42,10 @@ export default async function DashboardPage() {
         ))}
       </div>
 
+      <Link href="/builders-circle/alerts" className="flex items-center gap-3 p-4 mb-6 rounded-sm text-sm" style={{ background: '#fff7ed', border: '1px solid #fdba74', color: '#7c2d12' }}>
+        <span aria-hidden>🔔</span> <span><strong>Get job alerts on your phone.</strong> We will alert you when a new Grand Bahama job or tender is posted. <span className="underline font-bold">Turn on →</span></span>
+      </Link>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="p-6 rounded-sm" style={cardStyle}>
           <div className="flex justify-between items-center mb-4">

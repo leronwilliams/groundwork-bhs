@@ -18,6 +18,8 @@ export const metadata: Metadata = {
   title: { default: DEFAULT_TITLE, template: `%s | ${SITE_NAME}` },
   description: DEFAULT_DESCRIPTION,
   applicationName: SITE_NAME,
+  icons: { apple: '/icons/apple-touch-icon.png' },
+  appleWebApp: { capable: true, title: 'Groundwork', statusBarStyle: 'black-translucent' },
   keywords: ['bahamas construction', 'building permits bahamas', 'construction cost nassau', 'bill of quantities bahamas', 'property tax bahamas', 'contractors nassau', 'duty exemption building materials'],
   openGraph: { type: 'website', siteName: SITE_NAME, title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, url: '/', locale: 'en_BS', images: [OG_IMAGE] },
   twitter: { card: 'summary_large_image', title: DEFAULT_TITLE, description: DEFAULT_DESCRIPTION, images: [OG_IMAGE.url] },

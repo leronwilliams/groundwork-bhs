@@ -56,6 +56,11 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
 
   const body = (
     <>
+      {member && (
+        <Link href="/builders-circle/alerts" className="flex items-center gap-3 p-4 mb-6 rounded-sm text-sm" style={{ background: '#fff7ed', border: '1px solid #fdba74', color: '#7c2d12' }} data-testid="alerts-banner">
+          <BellRing size={18} /> <span><strong>Turn on job alerts</strong> and get a phone alert the moment a new Grand Bahama job is posted. <span className="underline font-bold">Set up in a minute →</span></span>
+        </Link>
+      )}
       <div className="flex flex-col gap-3 mb-6" data-testid="board-filters">
         <div className="flex gap-2 flex-wrap items-center">
           <span className="text-xs font-mono mr-1" style={{ color: 'var(--muted)' }}>TYPE</span>
@@ -92,7 +97,7 @@ export default async function BoardPage({ searchParams }: { searchParams: Promis
             const closed = !!p.closeDate && p.closeDate.getTime() < Date.now()
             const soon = !!p.closeDate && !closed && p.closeDate.getTime() - Date.now() < 7 * 86400000
             return (
-              <article key={p.id} className="p-5 md:p-6 rounded-sm" data-post-id={p.id} style={{ ...cardStyle, background: '#ffffff', borderLeft: `4px solid ${color}`, opacity: closed ? 0.6 : 1 }}>
+              <article key={p.id} id={`post-${p.id}`} className="p-5 md:p-6 rounded-sm scroll-mt-28" data-post-id={p.id} style={{ ...cardStyle, background: '#ffffff', borderLeft: `4px solid ${color}`, opacity: closed ? 0.6 : 1 }}>
                 <div className="flex flex-wrap items-center gap-2 mb-3">
                   <span className="text-[10px] font-bold uppercase tracking-widest px-2 py-0.5 rounded-sm" style={{ background: color, color: '#fff' }}>{TYPE_LABEL[p.type] || p.type}</span>
                   <span className="inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-sm font-mono" style={{ background: 'var(--amber-dim)', color: 'var(--amber)', border: '1px solid rgba(234,88,12,0.35)' }}><MapPin size={11} /> {p.location}</span>

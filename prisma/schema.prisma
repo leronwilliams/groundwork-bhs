@@ -425,6 +425,7 @@ model BoardPost {
   status       String    @default("draft") // draft | published
   publishedAt  DateTime?
   digestSentAt DateTime?
+  pushSentAt   DateTime?
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
@@ -435,4 +436,22 @@ model BoardPost {
 model BoardDigestOptOut {
   memberId  String   @id
   createdAt DateTime @default(now())
+}
+
+// A browser/device that opted in to Web Push job alerts. memberId is null for an admin's own test device.
+model PushSubscription {
+  id            String    @id @default(cuid())
+  endpoint      String    @unique
+  p256dh        String
+  auth          String
+  userId        String // Clerk user id
+  memberId      String? // CircleMember.id (no FK so it never blocks member changes)
+  areas         String[] // snapshot of the member's service areas at subscribe time
+  userAgent     String?
+  failCount     Int       @default(0)
+  createdAt     DateTime  @default(now())
+  lastSuccessAt DateTime?
+
+  @@index([userId])
+  @@index([memberId])
 }
